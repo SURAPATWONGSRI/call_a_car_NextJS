@@ -79,7 +79,7 @@ export function NavMain({
               <SidebarMenuButton asChild tooltip={item.title}>
                 <Link href={item.url} className="flex items-center">
                   {item.icon && <item.icon className="mr-2" />}
-                  <span>{item.title}</span>
+                  <span className="text-primary text-sm">{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

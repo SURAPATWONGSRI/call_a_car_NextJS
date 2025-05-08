@@ -15,27 +15,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Driver } from "@/types/driver";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { useState } from "react";
 
-// Dummy data for demonstration
+// Updated Driver type to match the new schema
+type Driver = {
+  id: string;
+  name: string;
+  phone: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+// Dummy data updated to match new schema
 const initialDrivers: Driver[] = [
   {
     id: "1",
     name: "สมชาย ใจดี",
-    licenseNumber: "12345678",
-    phoneNumber: "0891234567",
-    licenseType: "ประเภท 2",
-    status: "active",
+    phone: "0891234567",
+    active: true,
+    created_at: "2023-06-01T10:00:00Z",
+    updated_at: "2023-06-01T10:00:00Z",
   },
   {
     id: "2",
     name: "สมหญิง รักดี",
-    licenseNumber: "87654321",
-    phoneNumber: "0891234568",
-    licenseType: "ประเภท 3",
-    status: "inactive",
+    phone: "0891234568",
+    active: false,
+    created_at: "2023-06-02T11:30:00Z",
+    updated_at: "2023-06-15T14:45:00Z",
   },
 ];
 
@@ -46,11 +55,19 @@ export function DriversDataTable() {
     setDrivers(drivers.filter((driver) => driver.id !== id));
   };
 
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("th-TH");
+  };
+
   return (
     <div className="w-full">
       <Table>
         <TableHeader>
           <TableRow className="border-b">
+            <TableHead className="py-5 px-8 font-semibold text-sm">
+              ID
+            </TableHead>
             <TableHead className="py-5 px-8 font-semibold text-sm">
               ชื่อ-นามสกุล
             </TableHead>
@@ -58,13 +75,13 @@ export function DriversDataTable() {
               เบอร์โทรศัพท์
             </TableHead>
             <TableHead className="py-5 px-8 font-semibold text-sm">
-              เลขที่ใบขับขี่
-            </TableHead>
-            <TableHead className="py-5 px-8 font-semibold text-sm">
-              ประเภทใบขับขี่
-            </TableHead>
-            <TableHead className="py-5 px-8 font-semibold text-sm">
               สถานะ
+            </TableHead>
+            <TableHead className="py-5 px-8 font-semibold text-sm">
+              วันที่เวลาที่เพิ่ม
+            </TableHead>
+            <TableHead className="py-5 px-8 font-semibold text-sm">
+              วันที่เวลาที่แก้ไข
             </TableHead>
             <TableHead className="py-5 px-8 w-[120px] text-right">
               จัดการ
@@ -75,7 +92,7 @@ export function DriversDataTable() {
           {drivers.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="text-center py-10 text-gray-500"
               >
                 ไม่พบข้อมูลคนขับรถ
@@ -88,27 +105,28 @@ export function DriversDataTable() {
                 className="hover:bg-gray-50/50 border-b last:border-0"
               >
                 <TableCell className="py-5 px-8 font-medium">
+                  {driver.id}
+                </TableCell>
+                <TableCell className="py-5 px-8 font-medium">
                   {driver.name}
                 </TableCell>
-                <TableCell className="py-5 px-8">
-                  {driver.phoneNumber}
-                </TableCell>
-                <TableCell className="py-5 px-8">
-                  {driver.licenseNumber}
-                </TableCell>
-                <TableCell className="py-5 px-8">
-                  {driver.licenseType}
-                </TableCell>
+                <TableCell className="py-5 px-8">{driver.phone}</TableCell>
                 <TableCell className="py-5 px-8">
                   <span
                     className={`px-4 py-1.5 rounded-full text-xs font-medium ${
-                      driver.status === "active"
+                      driver.active
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
                     }`}
                   >
-                    {driver.status === "active" ? "ใช้งาน" : "ไม่ใช้งาน"}
+                    {driver.active ? "ใช้งาน" : "ไม่ใช้งาน"}
                   </span>
+                </TableCell>
+                <TableCell className="py-5 px-8">
+                  {formatDate(driver.created_at)}
+                </TableCell>
+                <TableCell className="py-5 px-8">
+                  {formatDate(driver.updated_at)}
                 </TableCell>
                 <TableCell className="py-5 px-8 text-right">
                   <DropdownMenu>

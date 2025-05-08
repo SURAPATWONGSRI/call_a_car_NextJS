@@ -1,0 +1,1 @@
+ALTER TABLE "vehicles" ADD COLUMN "model" varchar(50);

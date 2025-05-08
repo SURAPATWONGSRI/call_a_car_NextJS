@@ -44,7 +44,7 @@ const data = {
       icon: UsersRound,
     },
     {
-      title: "ข้อมูลคนขับรถ",
+      title: "ข้อมูลพนักงานขับรถ",
       href: "/admin/drivers",
       icon: Contact,
     },
@@ -74,7 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-semibold">Car Rent</span>
-                  <span className="">v1.0.0</span>
+                  <span className="">v.1.0.0</span>
                 </div>
               </Link>
             </SidebarMenuButton>

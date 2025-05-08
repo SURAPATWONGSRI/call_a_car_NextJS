@@ -49,29 +49,31 @@ const AdminHomePage = () => {
     {
       title: "เพิ่มการจองใหม่",
       link: "/admin/reservations",
-      color: "bg-primary text-white",
+      color: "bg-primary/80",
+      bgClass:
+        "bg-[url('https://s.yimg.com/ny/api/res/1.2/5jWvh2e0o3q798pwNZU1ew--/YXBwaWQ9aGlnaGxhbmRlcjt3PTY0MDtoPTM2MA--/https://media.zenfs.com/en/gobankingrates_644/6fc737d7d92e6395b2a0c58997fe82d3')]",
     },
     {
       title: "เพิ่มลูกค้าใหม่",
       link: "/admin/customers",
-      color: "bg-blue-600 text-white",
+      color: "bg-blue-600/80",
+      bgClass:
+        "bg-[url('https://www.zandxcars.com/wp-content/uploads/2022/06/girls.car_.smiling.jpg')]",
     },
     {
       title: "เพิ่มคนขับรถ",
       link: "/admin/drivers",
-      color: "bg-emerald-600 text-white",
+      color: "bg-emerald-600/80",
+      bgClass:
+        "bg-[url('https://rahahome.com/wp-content/uploads/2022/11/2-min-scaled.jpg')]",
     },
     {
       title: "เพิ่มยานพาหนะ",
       link: "/admin/vehicles",
-      color: "bg-amber-600 text-white",
+      color: "bg-amber-600/80",
+      bgClass:
+        "bg-[url('https://t3.ftcdn.net/jpg/03/30/86/68/360_F_330866818_Roxy8uGcMahMVont2KrYNJEI41w91LWJ.jpg')]",
     },
-    // {
-    //   title: "ดูรายงาน",
-    //   link: "/admin/dashboard",
-    //   color: "bg-violet-600 text-white",
-    // },
-    // { title: "ตั้งค่าระบบ", link: "#", color: "bg-slate-700 text-white" },
   ];
 
   return (
@@ -80,7 +82,7 @@ const AdminHomePage = () => {
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">
           ยินดีต้อนรับ, Admin
         </h1>
-        <p className="text-slate-500">ภาพรวมของระบบบริหารจัดการรถเช่า</p>
+        <p className="text-muted-foreground">ภาพรวมของระบบบริหารจัดการรถเช่า</p>
       </div>
 
       {/* Quick Stats */}
@@ -116,10 +118,25 @@ const AdminHomePage = () => {
           {quickActions.map((action, index) => (
             <Link href={action.link} key={index}>
               <Card
-                className={`${action.color} cursor-pointer hover:opacity-90 transition-opacity`}
+                className={`cursor-pointer hover:opacity-90 transition-opacity overflow-hidden relative h-[160px]`}
               >
-                <CardContent className="p-6 flex items-center justify-center min-h-[100px]">
-                  <span className="text-lg font-medium">{action.title}</span>
+                {/* Apply background image with improved sizing and positioning */}
+                <div
+                  className={`absolute inset-0 ${action.bgClass} bg-cover bg-center bg-no-repeat`}
+                  style={{
+                    objectFit: "cover",
+                    objectPosition: "center",
+                  }}
+                ></div>
+
+                {/* Dark overlay for better text visibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/60"></div>
+
+                {/* Content */}
+                <CardContent className="p-6 flex items-center justify-center h-full relative z-10">
+                  <span className="text-2xl font-black text-white drop-shadow-md">
+                    {action.title}
+                  </span>
                 </CardContent>
               </Card>
             </Link>
