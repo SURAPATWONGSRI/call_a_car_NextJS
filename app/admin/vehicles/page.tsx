@@ -127,17 +127,26 @@ const VehiclesPage = () => {
 
     setIsDeletingVehicle(true);
     try {
-      const response = await fetch(`/api/vehicles?id=${vehicleToDelete}`, {
+      const response = await fetch(`/api/vehicles/${vehicleToDelete}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete vehicle");
+        // Better error handling for non-200 responses
+        let errorMessage = `Failed to delete vehicle (Status: ${response.status})`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (jsonError) {
+          console.error("Error parsing error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
       // Remove the vehicle from the list
-      setVehicles(vehicles.filter((v) => v.id !== vehicleToDelete));
+      setVehicles(vehicles.filter((vehicle) => vehicle.id !== vehicleToDelete));
 
       toast("Vehicle deleted", {
         description: "The vehicle has been deleted successfully.",
@@ -166,7 +175,7 @@ const VehiclesPage = () => {
         </div>
         <Button
           size="lg"
-          className="flex items-center gap-2 px-4 sm:px-6 w-full sm:w-auto justify-center"
+          className="flex items-center gap-2 px-4 sm:px-6  w-full sm:w-auto justify-center"
         >
           <PlusCircle className="h-5 w-5" />
           เพิ่มยานพาหนะ

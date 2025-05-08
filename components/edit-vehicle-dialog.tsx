@@ -81,10 +81,6 @@ export const EditVehicleDialog = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!vehicle) return;
@@ -106,7 +102,7 @@ export const EditVehicleDialog = ({
         <DialogHeader>
           <DialogTitle>แก้ไขข้อมูลยานพาหนะ</DialogTitle>
           <DialogDescription>
-            แก้ไขรายละเอียดยานพาหนะของคุณที่นี่ กดบันทึกเมื่อเสร็จสิ้น
+            แก้ไขรายละเอียดยานพาหนะกดบันทึกเมื่อเสร็จสิ้น
           </DialogDescription>
         </DialogHeader>
         {isFetching ? (

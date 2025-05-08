@@ -43,7 +43,6 @@ export async function POST(request: Request) {
         model: body.model || null,
         variant: body.variant || null,
         imageUrl: body.imageUrl || null,
-
         active: true,
       })
       .returning();

@@ -92,8 +92,7 @@ export const VehicleCard = ({
               variant,
               imageUrl,
               active: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
+              // timestamp fields จะถูกจัดการโดยฐานข้อมูล
             })
           }
           className="flex items-center gap-2"

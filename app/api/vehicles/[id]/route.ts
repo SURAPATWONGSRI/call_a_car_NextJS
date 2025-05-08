@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { vehicles } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 // Helper function to safely get params
@@ -72,7 +72,7 @@ export async function PUT(
         type: body.type,
         imageUrl: body.imageUrl,
         active: body.active !== undefined ? body.active : true,
-        updatedAt: new Date(),
+        updatedAt: sql`(NOW() AT TIME ZONE 'Asia/Bangkok')`,
       })
       .where(eq(vehicles.id, id))
       .returning();

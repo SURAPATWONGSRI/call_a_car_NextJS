@@ -7,6 +7,4 @@ export interface Vehicle {
   variant: string | null;
   active: boolean;
   imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
 }
