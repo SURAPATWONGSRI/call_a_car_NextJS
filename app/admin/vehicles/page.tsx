@@ -1,8 +1,10 @@
 "use client";
 
+import { AddVehicleDialog } from "@/components/add-vehicle-dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { EditVehicleDialog } from "@/components/edit-vehicle-dialog";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { VehicleCard } from "@/components/vehicle-card";
 import { Vehicle } from "@/types/vehicle";
 import { PlusCircle } from "lucide-react";
@@ -18,6 +20,7 @@ const VehiclesPage = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [vehicleToDelete, setVehicleToDelete] = useState<number | null>(null);
   const [isDeletingVehicle, setIsDeletingVehicle] = useState<boolean>(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
 
   const fetchVehicles = async () => {
     setIsLoading(true);
@@ -164,6 +167,10 @@ const VehiclesPage = () => {
     }
   };
 
+  const handleAddVehicle = (newVehicle: Vehicle) => {
+    setVehicles([...vehicles, newVehicle]);
+  };
+
   return (
     <div className="w-full space-y-4 sm:space-y-6 md:space-y-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
@@ -176,17 +183,14 @@ const VehiclesPage = () => {
         <Button
           size="lg"
           className="flex items-center gap-2 px-4 sm:px-6  w-full sm:w-auto justify-center"
+          onClick={() => setIsAddDialogOpen(true)}
         >
           <PlusCircle className="h-5 w-5" />
           เพิ่มยานพาหนะ
         </Button>
       </div>
 
-      {isLoading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      )}
+      {isLoading && <LoadingSpinner />}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -225,8 +229,14 @@ const VehiclesPage = () => {
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={confirmDeleteVehicle}
         isLoading={isDeletingVehicle}
-        title="ลบยานพาหนะ"
-        description="คุณต้องการลบยานพาหนะนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        title="ลบ"
+        description="คุณต้องการลบยานพาหนะนี้ใช่หรือไม่?"
+      />
+
+      <AddVehicleDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onAdd={handleAddVehicle}
       />
     </div>
   );

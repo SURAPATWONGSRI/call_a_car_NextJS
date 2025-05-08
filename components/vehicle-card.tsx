@@ -29,7 +29,7 @@ export const VehicleCard = ({
 }: VehicleCardProps) => {
   return (
     <Card className="overflow-hidden h-[650px] flex flex-col">
-      <CardHeader className="p-4 md:p-4">
+      <CardHeader className="p-4 pt-2 md:p-4">
         <CardTitle className="text-xl truncate">
           {brand} {model || ""} {variant || ""}
         </CardTitle>
@@ -37,7 +37,7 @@ export const VehicleCard = ({
           ทะเบียน {licensePlate}
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-4 md:p-6 pt-0 flex-grow flex flex-col">
+      <CardContent className="p-4 md:p-6  flex-grow flex flex-col">
         {imageUrl ? (
           <div className="aspect-video w-full rounded-md mb-4 overflow-hidden h-[200px]">
             <Image
@@ -78,7 +78,7 @@ export const VehicleCard = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex justify-between">
+      <CardFooter className="p-6 pt-2 flex justify-between ">
         <Button
           variant="outline"
           size="sm"
@@ -95,18 +95,18 @@ export const VehicleCard = ({
               // timestamp fields จะถูกจัดการโดยฐานข้อมูล
             })
           }
-          className="flex items-center gap-2"
+          className="w-[48%]"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-4 w-4 mr-2" />
           แก้ไข
         </Button>
         <Button
           variant="destructive"
           size="sm"
           onClick={() => onDelete?.(id)}
-          className="flex items-center gap-2"
+          className="w-[48%]"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-4 w-4 mr-2" />
           ลบ
         </Button>
       </CardFooter>

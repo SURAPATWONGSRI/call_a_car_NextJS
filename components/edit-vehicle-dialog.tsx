@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/types/vehicle";
+import { Save } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type EditVehicleDialogProps = {
@@ -100,7 +101,7 @@ export const EditVehicleDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>แก้ไขข้อมูลยานพาหนะ</DialogTitle>
+          <DialogTitle>แก้ไขข้อมูล</DialogTitle>
           <DialogDescription>
             แก้ไขรายละเอียดยานพาหนะกดบันทึกเมื่อเสร็จสิ้น
           </DialogDescription>
@@ -173,8 +174,19 @@ export const EditVehicleDialog = ({
               >
                 ยกเลิก
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "กำลังบันทึก..." : "บันทึก"}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="flex items-center gap-2"
+              >
+                {isLoading ? (
+                  "กำลังบันทึก..."
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    บันทึก
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>
