@@ -4,36 +4,65 @@ import { AddDriverDialog } from "@/components/drivers/add-driver-dialog";
 import { DriversDataTable } from "@/components/drivers/drivers-data-table";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+// Driver type definition
+type Driver = {
+  id: string;
+  name: string;
+  phone: string;
+  active: boolean;
+  imageUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 const DriversPage = () => {
   const [open, setOpen] = useState(false);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/drivers");
+        if (!response.ok) {
+          throw new Error("Failed to fetch drivers");
+        }
+        const data = await response.json();
+        setDrivers(data);
+      } catch (error) {
+        console.error("Error fetching drivers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDrivers();
+  }, []);
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">
-            รายชื่อคนขับรถ
-          </h1>
-          <p className="text-muted-foreground">
-            จัดการข้อมูลและสิทธิ์ของคนขับรถทั้งหมดในระบบ
-          </p>
+    <div className="w-full space-y-4 sm:space-y-6 md:space-y-8">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-bold tracking-tight">
+            รายชื่อพนักงานขับรถ
+          </h2>
+          <p className="text-muted-foreground">จัดการข้อมูลของคนขับรถทั้งหมด</p>
         </div>
         <Button
           onClick={() => setOpen(true)}
-          size="lg"
-          className="flex items-center gap-2 px-4 sm:px-6 w-full sm:w-auto justify-center"
+          size="default"
+          className="flex items-center gap-2"
         >
-          <PlusCircle className="h-5 w-5" />
+          <PlusCircle className="h-4 w-4" />
           เพิ่มคนขับรถ
         </Button>
       </div>
 
-      <div className="bg-background rounded-lg border shadow-sm w-full overflow-hidden">
-        <div className="p-3 sm:p-4">
-          <DriversDataTable />
-        </div>
+      <div className="p-6">
+        <DriversDataTable drivers={drivers} loading={loading} />
       </div>
 
       <AddDriverDialog open={open} onOpenChange={setOpen} />

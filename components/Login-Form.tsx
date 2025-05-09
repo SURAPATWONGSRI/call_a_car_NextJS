@@ -15,7 +15,7 @@ export function LoginForm({
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-2">
             <span className="flex flex-col items-center gap-2 font-medium">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <CarFront size={60} />
               </div>
               <span className="sr-only">TOR for fleetflex Mini Project.</span>

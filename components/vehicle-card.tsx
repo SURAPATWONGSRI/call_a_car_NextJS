@@ -37,19 +37,19 @@ export const VehicleCard = ({
           ทะเบียน {licensePlate}
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-4 md:p-6  flex-grow flex flex-col">
+      <CardContent className="p-4 md:p-6 flex-grow flex flex-col">
         {imageUrl ? (
-          <div className="aspect-video w-full rounded-md mb-4 overflow-hidden h-[200px]">
+          <div className="aspect-video w-full rounded-md mb-4 overflow-hidden h-[200px] flex items-center justify-center">
             <Image
               src={imageUrl}
               width={400}
               height={400}
-              alt={`${brand} ${type}`}
+              alt={`${brand}-${type}`}
               className="object-cover "
             />
           </div>
         ) : (
-          <div className="aspect-video w-full bg-slate-100 rounded-md mb-4 flex items-center justify-center text-slate-400 h-[200px]">
+          <div className="aspect-video w-full bg-muted rounded-md mb-4 flex items-center justify-center text-muted-foreground h-[200px]">
             รูปภาพ
           </div>
         )}
@@ -101,13 +101,13 @@ export const VehicleCard = ({
           แก้ไข
         </Button>
         <Button
-          variant="destructive"
+          variant="outline"
           size="sm"
           onClick={() => onDelete?.(id)}
-          className="w-[48%]"
+          className="w-[48%] border-destructive/30 hover:bg-destructive/30"
         >
-          <Trash2 className="h-4 w-4 mr-2" />
-          ลบ
+          <Trash2 className="h-4 w-4 mr-2 text-destructive" />
+          <p className="text-destructive">ลบ</p>
         </Button>
       </CardFooter>
     </Card>

@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="th">
       <body className={`${anuphan.className} antialiased`}>
         {children}
-        <Toaster position="bottom-right" richColors closeButton />
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

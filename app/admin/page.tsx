@@ -80,7 +80,7 @@ const AdminHomePage = () => {
     <div className="space-y-6 md:space-y-8 w-full">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">
-          ยินดีต้อนรับ, Admin
+          ยินดีต้อนรับ, wakim
         </h1>
         <p className="text-muted-foreground">ภาพรวมของระบบบริหารจัดการรถเช่า</p>
       </div>
@@ -113,7 +113,7 @@ const AdminHomePage = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg sm:text-xl font-semibold mb-4">เมนูลัด</h2>
+        <h2 className="text-xl sm:text-xl font-semibold mb-4">เมนู (Menu)</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
           {quickActions.map((action, index) => (
             <Link href={action.link} key={index}>

@@ -8,10 +8,13 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { VehicleCard } from "@/components/vehicle-card";
 import { Vehicle } from "@/types/vehicle";
 import { PlusCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const VehiclesPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +24,27 @@ const VehiclesPage = () => {
   const [vehicleToDelete, setVehicleToDelete] = useState<number | null>(null);
   const [isDeletingVehicle, setIsDeletingVehicle] = useState<boolean>(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
+
+  // Check if there's an ID in the URL to open edit dialog automatically
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (editId && !isNaN(Number(editId))) {
+      // Find the vehicle with this ID
+      const vehicleToEdit = vehicles.find((v) => v.id === Number(editId));
+      if (vehicleToEdit) {
+        setSelectedVehicle(vehicleToEdit);
+        setIsEditDialogOpen(true);
+      }
+    }
+  }, [searchParams, vehicles]);
+
+  // Update URL when dialog state changes
+  useEffect(() => {
+    if (!isEditDialogOpen && searchParams.has("edit")) {
+      // Remove edit parameter when dialog is closed
+      router.push("/admin/vehicles", { scroll: false });
+    }
+  }, [isEditDialogOpen, router, searchParams]);
 
   const fetchVehicles = async () => {
     setIsLoading(true);
@@ -67,6 +91,8 @@ const VehiclesPage = () => {
   const handleEditVehicle = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
     setIsEditDialogOpen(true);
+    // Update URL to reflect the edited vehicle (for sharing/bookmarking)
+    router.push(`/admin/vehicles?edit=${vehicle.id}`, { scroll: false });
   };
 
   const handleDeleteVehicle = (id: number) => {

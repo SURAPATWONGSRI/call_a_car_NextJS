@@ -22,7 +22,7 @@ export async function GET(
 
     if (isNaN(id)) {
       return NextResponse.json(
-        { error: "Invalid vehicle ID" },
+        { error: "Invalid vehicle ID", code: "INVALID_ID" },
         { status: 400 }
       );
     }
@@ -32,14 +32,24 @@ export async function GET(
     });
 
     if (!vehicle) {
-      return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: "Vehicle not found",
+          code: "NOT_FOUND",
+        },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ vehicle }, { status: 200 });
   } catch (error) {
     console.error("Error fetching vehicle:", error);
     return NextResponse.json(
-      { error: "Failed to fetch vehicle" },
+      {
+        error: "Failed to fetch vehicle",
+        code: "SERVER_ERROR",
+        details: error instanceof Error ? error.message : undefined,
+      },
       { status: 500 }
     );
   }

@@ -18,7 +18,7 @@ export default function AdminLayout({
 }>) {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar variant="inset" />
       <SidebarInset>
         <AdminHeader />
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>

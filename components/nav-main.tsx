@@ -2,6 +2,7 @@
 
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import {
   Collapsible,
@@ -19,20 +20,26 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-export function NavMain({
-  items,
-}: {
-  items: {
+type NavItem = {
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+  isActive?: boolean;
+  items?: {
     title: string;
     url: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    items?: {
-      title: string;
-      url: string;
-    }[];
   }[];
-}) {
+};
+
+export function NavMain({ items: initialItems }: { items: NavItem[] }) {
+  // Use state to ensure consistent rendering between client and server
+  const [items, setItems] = useState<NavItem[]>([]);
+
+  // Only render items after component is mounted on the client
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
@@ -79,7 +86,7 @@ export function NavMain({
               <SidebarMenuButton asChild tooltip={item.title}>
                 <Link href={item.url} className="flex items-center">
                   {item.icon && <item.icon className="mr-2" />}
-                  <span className="text-primary text-sm">{item.title}</span>
+                  <p className="text-primary text-sm">{item.title}</p>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

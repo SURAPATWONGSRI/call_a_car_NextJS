@@ -25,7 +25,7 @@ export function NavUser({
 }: {
   user: {
     name: string;
-    email: string;
+    role: string;
     avatar: string;
   };
   className?: string;
@@ -53,7 +53,7 @@ export function NavUser({
               <div className="grid flex-1 text-left text-xs md:text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name}</span>
                 <span className="truncate text-[10px] md:text-xs opacity-80">
-                  {user.email}
+                  {user.role}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-3 md:size-4" />
@@ -74,7 +74,7 @@ export function NavUser({
                 <div className="grid flex-1 text-left leading-tight">
                   <span className="truncate font-semibold">{user.name}</span>
                   <span className="truncate text-xs opacity-80">
-                    {user.email}
+                    {user.role}
                   </span>
                 </div>
               </div>

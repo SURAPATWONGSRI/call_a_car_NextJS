@@ -2,12 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Table,
   TableBody,
   TableCell,
@@ -15,147 +9,214 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatDate } from "@/lib/utils/date";
+import { ArrowUpDown, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-// Updated Driver type to match the new schema
+// Updated Driver type to match the actual DB schema
 type Driver = {
   id: string;
   name: string;
   phone: string;
   active: boolean;
-  created_at: string;
-  updated_at: string;
+  imageUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-// Dummy data updated to match new schema
-const initialDrivers: Driver[] = [
-  {
-    id: "1",
-    name: "สมชาย ใจดี",
-    phone: "0891234567",
-    active: true,
-    created_at: "2023-06-01T10:00:00Z",
-    updated_at: "2023-06-01T10:00:00Z",
-  },
-  {
-    id: "2",
-    name: "สมหญิง รักดี",
-    phone: "0891234568",
-    active: false,
-    created_at: "2023-06-02T11:30:00Z",
-    updated_at: "2023-06-15T14:45:00Z",
-  },
-];
+interface DriversDataTableProps {
+  drivers: Driver[];
+  loading: boolean;
+}
 
-export function DriversDataTable() {
+export function DriversDataTable({
+  drivers: initialDrivers,
+  loading,
+}: DriversDataTableProps) {
   const [drivers, setDrivers] = useState<Driver[]>(initialDrivers);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Update drivers when props change
+  if (JSON.stringify(initialDrivers) !== JSON.stringify(drivers) && !loading) {
+    setDrivers(initialDrivers);
+  }
 
   const handleDelete = (id: string) => {
     setDrivers(drivers.filter((driver) => driver.id !== id));
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("th-TH");
+  // Handle sorting
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+
+    const sortedDrivers = [...drivers].sort((a, b) => {
+      // Map column names to match database fields
+      const dbColumn =
+        column === "created_at"
+          ? "createdAt"
+          : column === "updated_at"
+          ? "updatedAt"
+          : column;
+
+      const aValue = a[dbColumn as keyof Driver];
+      const bValue = b[dbColumn as keyof Driver];
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortDirection === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      } else {
+        return 0;
+      }
+    });
+
+    setDrivers(sortedDrivers);
   };
 
   return (
     <div className="w-full">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-b">
-            <TableHead className="py-5 px-8 font-semibold text-sm">
-              ID
-            </TableHead>
-            <TableHead className="py-5 px-8 font-semibold text-sm">
-              ชื่อ-นามสกุล
-            </TableHead>
-            <TableHead className="py-5 px-8 font-semibold text-sm">
-              เบอร์โทรศัพท์
-            </TableHead>
-            <TableHead className="py-5 px-8 font-semibold text-sm">
-              สถานะ
-            </TableHead>
-            <TableHead className="py-5 px-8 font-semibold text-sm">
-              วันที่เวลาที่เพิ่ม
-            </TableHead>
-            <TableHead className="py-5 px-8 font-semibold text-sm">
-              วันที่เวลาที่แก้ไข
-            </TableHead>
-            <TableHead className="py-5 px-8 w-[120px] text-right">
-              จัดการ
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {drivers.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={7}
-                className="text-center py-10 text-gray-500"
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[80px]">ID</TableHead>
+              <TableHead className="w-[100px] ">รูปภาพ</TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-muted/60 transition-colors"
+                onClick={() => handleSort("name")}
               >
-                ไม่พบข้อมูลคนขับรถ
-              </TableCell>
+                <div className="flex items-center">
+                  ชื่อ-นามสกุล
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead>เบอร์โทรศัพท์</TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-muted/60 transition-colors"
+                onClick={() => handleSort("created_at")}
+              >
+                <div className="flex items-center">
+                  วันที่เพิ่ม
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead>วันที่แก้ไข</TableHead>
+              <TableHead className="w-[150px] text-right">จัดการ</TableHead>
             </TableRow>
-          ) : (
-            drivers.map((driver) => (
-              <TableRow
-                key={driver.id}
-                className="hover:bg-gray-50/50 border-b last:border-0"
-              >
-                <TableCell className="py-5 px-8 font-medium">
-                  {driver.id}
-                </TableCell>
-                <TableCell className="py-5 px-8 font-medium">
-                  {driver.name}
-                </TableCell>
-                <TableCell className="py-5 px-8">{driver.phone}</TableCell>
-                <TableCell className="py-5 px-8">
-                  <span
-                    className={`px-4 py-1.5 rounded-full text-xs font-medium ${
-                      driver.active
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {driver.active ? "ใช้งาน" : "ไม่ใช้งาน"}
-                  </span>
-                </TableCell>
-                <TableCell className="py-5 px-8">
-                  {formatDate(driver.created_at)}
-                </TableCell>
-                <TableCell className="py-5 px-8">
-                  {formatDate(driver.updated_at)}
-                </TableCell>
-                <TableCell className="py-5 px-8 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-9 w-9 p-0">
-                        <span className="sr-only">เปิดเมนู</span>
-                        <MoreHorizontal className="h-5 w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                        <Pencil className="h-4 w-4" />
-                        แก้ไข
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600"
-                        onClick={() => handleDelete(driver.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                        ลบ
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  กำลังโหลดข้อมูล...
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : drivers.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  ไม่พบข้อมูลคนขับรถ
+                </TableCell>
+              </TableRow>
+            ) : (
+              drivers.map((driver) => (
+                <TableRow
+                  key={driver.id}
+                  className="hover:bg-muted/50 transition-colors"
+                >
+                  <TableCell className="font-medium">{driver.id}</TableCell>
+                  <TableCell>
+                    {driver.imageUrl ? (
+                      <div className="relative w-10 h-10 overflow-hidden rounded-lg">
+                        <img
+                          src={driver.imageUrl}
+                          alt={`${driver.name}'s profile`}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
+                        <span className="text-xs text-muted-foreground">
+                          ไม่มีรูป
+                        </span>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium">{driver.name}</TableCell>
+                  <TableCell>{driver.phone}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    <div className="flex flex-col">
+                      <span>{formatDate(driver.createdAt)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    <div className="flex flex-col">
+                      <span>{formatDate(driver.updatedAt)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end items-center space-x-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 w-7 p-0 rounded-md border-muted-foreground/20"
+                            >
+                              <span className="sr-only">แก้ไข</span>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>แก้ไข</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 w-7 p-0 rounded-md border-destructive/30"
+                              onClick={() => handleDelete(driver.id)}
+                            >
+                              <span className="sr-only">ลบ</span>
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>ลบ</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
