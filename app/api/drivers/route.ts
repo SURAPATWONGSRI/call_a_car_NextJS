@@ -36,6 +36,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if a driver with the same name already exists
+    const existingDriver = await db
+      .select()
+      .from(drivers)
+      .where(eq(drivers.name, name))
+      .limit(1);
+
+    if (existingDriver.length > 0) {
+      return NextResponse.json(
+        { error: "Driver with this name already exists" },
+        { status: 409 }
+      );
+    }
+
     const newDriver = await db
       .insert(drivers)
       .values({

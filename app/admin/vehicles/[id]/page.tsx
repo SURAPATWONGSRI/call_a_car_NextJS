@@ -119,7 +119,7 @@ export default function VehicleDetailPage() {
         throw new Error(errorMessage);
       }
 
-      toast("Vehicle deleted", {
+      toast.success("Vehicle deleted", {
         description: "The vehicle has been deleted successfully.",
       });
 

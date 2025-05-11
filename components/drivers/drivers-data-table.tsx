@@ -16,19 +16,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/utils/date";
+import { Driver } from "@/types/driver";
 import { ArrowUpDown, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-
-// Updated Driver type to match the actual DB schema
-type Driver = {
-  id: string;
-  name: string;
-  phone: string;
-  active: boolean;
-  imageUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
 
 interface DriversDataTableProps {
   drivers: Driver[];

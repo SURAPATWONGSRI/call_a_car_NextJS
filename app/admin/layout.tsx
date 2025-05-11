@@ -1,6 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-
+import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import React from "react";
 
@@ -22,6 +22,7 @@ export default function AdminLayout({
       <SidebarInset>
         <AdminHeader />
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+        <Toaster />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -177,7 +177,7 @@ const VehiclesPage = () => {
       // Remove the vehicle from the list
       setVehicles(vehicles.filter((vehicle) => vehicle.id !== vehicleToDelete));
 
-      toast("Vehicle deleted", {
+      toast.success("Vehicle deleted", {
         description: "The vehicle has been deleted successfully.",
       });
     } catch (error) {

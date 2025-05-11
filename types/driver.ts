@@ -1,8 +1,9 @@
-export interface Driver {
+export type Driver = {
   id: string;
   name: string;
-  licenseNumber: string;
-  phoneNumber: string;
-  licenseType: string;
-  status: "active" | "inactive";
-}
+  phone: string;
+  active: boolean;
+  imageUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
