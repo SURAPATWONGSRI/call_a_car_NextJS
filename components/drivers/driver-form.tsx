@@ -29,8 +29,8 @@ export const driverFormSchema = z.object({
   name: z.string().min(1, { message: "ชื่อห้ามเป็นค่าว่าง" }),
   phone: z
     .string()
-    .min(9, { message: "เบอร์โทรศัพท์ต้องมีอย่างน้อย 9 ตัว" })
-    .max(20, { message: "เบอร์โทรศัพท์ต้องไม่เกิน 20 ตัว" })
+    .min(10, { message: "เบอร์โทรศัพท์ไม่ครบถ้วน" })
+    .max(10, { message: "เบอร์โทรศัพท์ต้องไม่เกิน 10 ตัว" })
     .optional()
     .or(z.literal("")),
   imageUrl: z
@@ -79,8 +79,6 @@ export function DriverForm({
       setApiError(result.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       return;
     }
-
-    // Call onSuccess if provided and result includes data
     if (onSuccess && result.data) {
       onSuccess(result.data);
     }

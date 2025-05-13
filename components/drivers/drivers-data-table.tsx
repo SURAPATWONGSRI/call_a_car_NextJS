@@ -18,29 +18,40 @@ import {
 import { formatDate } from "@/lib/utils/date";
 import { Driver } from "@/types/driver";
 import { ArrowUpDown, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+// Format Thai phone number: 0xxxxxxxxxx -> 0xx-xxx-xxxx
+const formatPhoneNumber = (phone: string): string => {
+  // Handle empty or invalid phone numbers
+  if (!phone || phone.length < 10) return phone;
+
+  // Format as 0xx-xxx-xxxx
+  return `${phone.slice(0, 3)}-${phone.slice(3, 6)}-${phone.slice(6)}`;
+};
 
 interface DriversDataTableProps {
   drivers: Driver[];
   loading: boolean;
+  onEdit: (driver: Driver) => void;
+  onDelete: (driver: Driver) => void;
 }
 
 export function DriversDataTable({
   drivers: initialDrivers,
   loading,
+  onEdit,
+  onDelete,
 }: DriversDataTableProps) {
   const [drivers, setDrivers] = useState<Driver[]>(initialDrivers);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  // Update drivers when props change
-  if (JSON.stringify(initialDrivers) !== JSON.stringify(drivers) && !loading) {
-    setDrivers(initialDrivers);
-  }
-
-  const handleDelete = (id: string) => {
-    setDrivers(drivers.filter((driver) => driver.id !== id));
-  };
+  // Use useEffect to update drivers when props change to avoid infinite render
+  useEffect(() => {
+    if (!loading) {
+      setDrivers(initialDrivers);
+    }
+  }, [initialDrivers, loading]);
 
   // Handle sorting
   const handleSort = (column: string) => {
@@ -150,7 +161,7 @@ export function DriversDataTable({
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{driver.name}</TableCell>
-                  <TableCell>{driver.phone}</TableCell>
+                  <TableCell>{formatPhoneNumber(driver.phone)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     <div className="flex flex-col">
                       <span>{formatDate(driver.createdAt)}</span>
@@ -170,6 +181,7 @@ export function DriversDataTable({
                               variant="outline"
                               size="sm"
                               className="h-7 w-7 p-0 rounded-md border-muted-foreground/20"
+                              onClick={() => onEdit(driver)}
                             >
                               <span className="sr-only">แก้ไข</span>
                               <Pencil className="h-3.5 w-3.5" />
@@ -188,7 +200,7 @@ export function DriversDataTable({
                               variant="outline"
                               size="sm"
                               className="h-7 w-7 p-0 rounded-md border-destructive/30"
-                              onClick={() => handleDelete(driver.id)}
+                              onClick={() => onDelete(driver)}
                             >
                               <span className="sr-only">ลบ</span>
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
