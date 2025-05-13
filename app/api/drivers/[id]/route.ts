@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { drivers } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 // GET handler to fetch a single driver by ID
@@ -78,7 +78,7 @@ export async function PUT(
         name,
         phone,
         imageUrl,
-        updatedAt: new Date(),
+        updatedAt: sql`(NOW() AT TIME ZONE 'Asia/Bangkok')`,
       })
       .where(eq(drivers.id, id))
       .returning();

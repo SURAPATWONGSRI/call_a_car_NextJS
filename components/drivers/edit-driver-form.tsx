@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -83,13 +82,21 @@ export function EditDriverForm({
   async function handleSubmit(values: z.infer<typeof editDriverFormSchema>) {
     if (!driver) return;
 
-    const result = await onSubmit(values, driver.id);
+    try {
+      const result = await onSubmit(values, driver.id);
 
-    if (result.success) {
-      form.reset();
-      onOpenChange(false);
-    } else if (result.error) {
-      form.setError("root", { message: result.error });
+      if (result.success) {
+        form.reset();
+        // Force the dialog to close with a slight delay to ensure state updates properly
+        setTimeout(() => onOpenChange(false), 100);
+      } else if (result.error) {
+        form.setError("root", { message: result.error });
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      form.setError("root", {
+        message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองอีกครั้ง",
+      });
     }
   }
 
@@ -159,7 +166,10 @@ export function EditDriverForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  form.reset();
+                  onOpenChange(false);
+                }}
               >
                 ยกเลิก
               </Button>

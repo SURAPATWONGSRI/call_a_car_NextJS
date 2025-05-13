@@ -52,7 +52,8 @@ export const drivers = pgTable("drivers", {
   name: varchar("name", { length: 100 }).notNull(),
   phone: varchar("phone", { length: 20 }),
   active: boolean("active").default(true),
-  imageUrl: varchar("image_url", { length: 255 }), // เพิ่ม imageUrl เป็น string
+  imageUrl: varchar("image_url", { length: 255 }),
+
   createdAt,
   updatedAt,
 });
@@ -60,10 +61,10 @@ export const drivers = pgTable("drivers", {
 // 👤 Customers (ผู้ใช้รถ)
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  phone: varchar("phone", { length: 20 }),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  phone: varchar("phone", { length: 20 }).notNull().unique(),
   active: boolean("active").default(true),
-  imageUrl: varchar("image_url", { length: 255 }), // เพิ่ม imageUrl เป็น string
+
   createdAt,
   updatedAt,
 });

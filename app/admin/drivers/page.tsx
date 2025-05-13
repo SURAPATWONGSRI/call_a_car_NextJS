@@ -7,6 +7,7 @@ import { EditDriverForm } from "@/components/drivers/edit-driver-form";
 import { Button } from "@/components/ui/button";
 import { Driver } from "@/types/driver";
 import { PlusCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -23,6 +24,11 @@ const DriversPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editParam = searchParams.get("edit");
+
+  // Split the data fetching and edit param handling into separate effects
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
@@ -42,7 +48,20 @@ const DriversPage = () => {
     };
 
     fetchDrivers();
-  }, []);
+  }, []); // Remove editParam dependency
+
+  // Handle the edit parameter in a separate effect
+  useEffect(() => {
+    if (editParam && drivers.length > 0) {
+      const driverToEdit = drivers.find(
+        (d: Driver) => d.id.toString() === editParam
+      );
+      if (driverToEdit) {
+        setSelectedDriver(driverToEdit);
+        setEditFormOpen(true);
+      }
+    }
+  }, [editParam, drivers]);
 
   async function handleDriverSubmit(
     values: z.infer<
@@ -106,6 +125,18 @@ const DriversPage = () => {
   const handleEditDriver = (driver: Driver) => {
     setSelectedDriver(driver);
     setEditFormOpen(true);
+
+    // Update URL with edit param but avoid refreshing the table
+    const newUrl = `/admin/drivers?edit=${driver.id}`;
+    window.history.pushState({}, "", newUrl);
+  };
+
+  // Handle edit form close - remove URL param without triggering refresh
+  const handleEditFormOpenChange = (open: boolean) => {
+    setEditFormOpen(open);
+    if (!open) {
+      window.history.pushState({}, "", "/admin/drivers");
+    }
   };
 
   const handleDeleteDriver = (driver: Driver) => {
@@ -233,7 +264,7 @@ const DriversPage = () => {
       {/* Add the new EditDriverForm component */}
       <EditDriverForm
         open={editFormOpen}
-        onOpenChange={setEditFormOpen}
+        onOpenChange={handleEditFormOpenChange}
         driver={selectedDriver}
         onSubmit={handleDriverUpdate}
         isSubmitting={isSubmitting}
