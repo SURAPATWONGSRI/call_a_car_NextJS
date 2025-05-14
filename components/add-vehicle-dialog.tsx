@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface AddVehicleDialogProps {
@@ -26,6 +26,8 @@ export function AddVehicleDialog({
   onAdd,
 }: AddVehicleDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     licensePlate: "",
     brand: "",
@@ -35,16 +37,139 @@ export function AddVehicleDialog({
     imageUrl: "",
   });
 
+  // Reset errors when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      setErrors({});
+    }
+  }, [open]);
+
+  // Check for duplicate license plate with debounce
+  useEffect(() => {
+    if (!formData.licensePlate) return;
+
+    const checkLicensePlate = async () => {
+      setIsChecking(true);
+      try {
+        const response = await fetch(
+          `/api/vehicles/check?licensePlate=${encodeURIComponent(
+            formData.licensePlate
+          )}`,
+          {
+            method: "GET",
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.exists) {
+          setErrors((prev) => ({
+            ...prev,
+            licensePlate: "ป้ายทะเบียนนี้มีในระบบแล้ว",
+          }));
+        } else {
+          setErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.licensePlate;
+            return newErrors;
+          });
+        }
+      } catch (error) {
+        console.error("Error checking license plate:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    const timeoutId = setTimeout(checkLicensePlate, 500);
+    return () => clearTimeout(timeoutId);
+  }, [formData.licensePlate]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate license plate
+    if (!formData.licensePlate.trim()) {
+      newErrors.licensePlate = "กรุณาระบุป้ายทะเบียน";
+    } else if (!/^[ก-ฮ0-9\s]{2,8}$/.test(formData.licensePlate.trim())) {
+      newErrors.licensePlate = "รูปแบบป้ายทะเบียนไม่ถูกต้อง";
+    }
+
+    // Validate brand
+    if (!formData.brand.trim()) {
+      newErrors.brand = "กรุณาระบุยี่ห้อ";
+    }
+
+    // Validate type
+    if (!formData.type.trim()) {
+      newErrors.type = "กรุณาระบุประเภท";
+    }
+
+    // Validate model
+    if (!formData.model.trim()) {
+      newErrors.model = "กรุณาระบุโมเดล";
+    }
+
+    // Validate imageUrl if provided
+    if (
+      formData.imageUrl &&
+      !formData.imageUrl.match(/^(http|https):\/\/[^\s$.?#].[^\s]*$/)
+    ) {
+      newErrors.imageUrl = "URL ไม่ถูกต้อง";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Clear error for this field as user types
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate form
+    if (!validateForm()) {
+      toast.error("กรุณาตรวจสอบข้อมูล", {
+        description: "มีข้อมูลที่ไม่ถูกต้องหรือไม่ครบถ้วน",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Check for duplicate license plate one more time before submission
+      const checkResponse = await fetch(
+        `/api/vehicles/check?licensePlate=${encodeURIComponent(
+          formData.licensePlate
+        )}`,
+        {
+          method: "GET",
+        }
+      );
+
+      const checkData = await checkResponse.json();
+
+      if (checkData.exists) {
+        setErrors((prev) => ({
+          ...prev,
+          licensePlate: "ป้ายทะเบียนนี้มีในระบบแล้ว",
+        }));
+        throw new Error("ป้ายทะเบียนนี้มีในระบบแล้ว");
+      }
+
       const response = await fetch("/api/vehicles", {
         method: "POST",
         headers: {
@@ -94,6 +219,13 @@ export function AddVehicleDialog({
     }
   };
 
+  const isFormValid =
+    Object.keys(errors).length === 0 &&
+    formData.licensePlate &&
+    formData.brand &&
+    formData.type &&
+    formData.model;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -109,57 +241,84 @@ export function AddVehicleDialog({
               <Label htmlFor="licensePlate" className="text-right">
                 ป้ายทะเบียน *
               </Label>
-              <Input
-                id="licensePlate"
-                name="licensePlate"
-                value={formData.licensePlate}
-                onChange={handleChange}
-                className="col-span-3"
-                placeholder="กท 1234"
-                required
-              />
+              <div className="col-span-3">
+                <Input
+                  id="licensePlate"
+                  name="licensePlate"
+                  value={formData.licensePlate}
+                  onChange={handleChange}
+                  placeholder="กท 1234"
+                  className={errors.licensePlate ? "border-red-500" : ""}
+                  required
+                />
+                {errors.licensePlate && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.licensePlate}
+                  </p>
+                )}
+                {isChecking && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    กำลังตรวจสอบป้ายทะเบียน...
+                  </p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="brand" className="text-right">
                 ยี่ห้อ *
               </Label>
-              <Input
-                id="brand"
-                name="brand"
-                value={formData.brand}
-                onChange={handleChange}
-                placeholder="Toyota"
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3">
+                <Input
+                  id="brand"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  placeholder="Toyota"
+                  className={errors.brand ? "border-red-500" : ""}
+                  required
+                />
+                {errors.brand && (
+                  <p className="text-red-500 text-xs mt-1">{errors.brand}</p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="type" className="text-right">
                 ประเภท *
               </Label>
-              <Input
-                id="type"
-                name="type"
-                value={formData.type}
-                placeholder="sedan"
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3">
+                <Input
+                  id="type"
+                  name="type"
+                  value={formData.type}
+                  placeholder="sedan"
+                  onChange={handleChange}
+                  className={errors.type ? "border-red-500" : ""}
+                  required
+                />
+                {errors.type && (
+                  <p className="text-red-500 text-xs mt-1">{errors.type}</p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="model" className="text-right">
                 โมเดล *
               </Label>
-              <Input
-                id="model"
-                name="model"
-                value={formData.model}
-                placeholder="corolla altis"
-                onChange={handleChange}
-                required
-                className="col-span-3"
-              />
+              <div className="col-span-3">
+                <Input
+                  id="model"
+                  name="model"
+                  value={formData.model}
+                  placeholder="corolla altis"
+                  onChange={handleChange}
+                  className={errors.model ? "border-red-500" : ""}
+                  required
+                />
+                {errors.model && (
+                  <p className="text-red-500 text-xs mt-1">{errors.model}</p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="variant" className="text-right">
@@ -178,14 +337,19 @@ export function AddVehicleDialog({
               <Label htmlFor="imageUrl" className="text-right">
                 URL รูปภาพ
               </Label>
-              <Input
-                id="imageUrl"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                className="col-span-3"
-                placeholder="https://example.com/image.jpg"
-              />
+              <div className="col-span-3">
+                <Input
+                  id="imageUrl"
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  className={errors.imageUrl ? "border-red-500" : ""}
+                  placeholder="https://example.com/image.jpg"
+                />
+                {errors.imageUrl && (
+                  <p className="text-red-500 text-xs mt-1">{errors.imageUrl}</p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -196,7 +360,10 @@ export function AddVehicleDialog({
             >
               ยกเลิก
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || isChecking || !isFormValid}
+            >
               {isSubmitting ? "กำลังบันทึก..." : "บันทึก"}
             </Button>
           </DialogFooter>

@@ -1,13 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CalendarIcon, Car, Clock, Users } from "lucide-react";
 import Link from "next/link";
 
@@ -82,11 +75,11 @@ const AdminHomePage = () => {
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">
           ยินดีต้อนรับ, wakim
         </h1>
-        <p className="text-muted-foreground">ภาพรวมของระบบบริหารจัดการรถเช่า</p>
+        <p className="text-muted-foreground">ภาพรวมของระบบ</p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {quickStats.map((stat, index) => {
           const IconComponent = stat.icon;
           return (
@@ -109,7 +102,7 @@ const AdminHomePage = () => {
             </Link>
           );
         })}
-      </div>
+      </div> */}
 
       {/* Quick Actions */}
       <div>
@@ -145,7 +138,7 @@ const AdminHomePage = () => {
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>กิจกรรมล่าสุด</CardTitle>
           <CardDescription>การดำเนินการล่าสุดในระบบ</CardDescription>
@@ -200,7 +193,7 @@ const AdminHomePage = () => {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };

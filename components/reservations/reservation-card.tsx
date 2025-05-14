@@ -15,7 +15,8 @@ const ReservationCard = ({
   reservation,
   onStatusChange,
 }: ReservationCardProps) => {
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Format the vehicle display string
   const vehicleDisplay = reservation.vehicle
@@ -75,7 +76,14 @@ const ReservationCard = ({
   const updateReservationStatus = async (newStatus: string) => {
     if (!reservation.id) return;
 
-    setIsUpdating(true);
+    const isConfirmAction = newStatus === "confirmed";
+
+    if (isConfirmAction) {
+      setIsConfirming(true);
+    } else {
+      setIsCancelling(true);
+    }
+
     try {
       // Log the request details
       console.log(
@@ -139,7 +147,11 @@ const ReservationCard = ({
           error instanceof Error ? error.message : "ไม่สามารถอัพเดทสถานะได้",
       });
     } finally {
-      setIsUpdating(false);
+      if (isConfirmAction) {
+        setIsConfirming(false);
+      } else {
+        setIsCancelling(false);
+      }
     }
   };
 
@@ -200,7 +212,7 @@ const ReservationCard = ({
               <img
                 src={imgDriverDisplay}
                 alt="Driver"
-                className="w-8 h-8 rounded-full mr-2 object-cover"
+                className="w-8 h-8 rounded-lg mr-2 object-cover"
               />
             )}
             {driverDisplay}
@@ -313,9 +325,9 @@ const ReservationCard = ({
               variant="default"
               size="lg"
               onClick={handleConfirm}
-              disabled={isUpdating}
+              disabled={isConfirming || isCancelling}
             >
-              {isUpdating ? (
+              {isConfirming ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   กำลังยืนยัน...
@@ -332,9 +344,9 @@ const ReservationCard = ({
               size="lg"
               className="text-red-600 hover:bg-red-50 hover:text-red-700"
               onClick={handleCancel}
-              disabled={isUpdating}
+              disabled={isConfirming || isCancelling}
             >
-              {isUpdating ? (
+              {isCancelling ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   กำลังยกเลิก...
