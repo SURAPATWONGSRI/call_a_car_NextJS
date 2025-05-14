@@ -61,7 +61,7 @@ const ReservationList = ({ date }: ReservationListProps) => {
   }, [date]);
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className="lg:col-span-2 bg-background">
       <CardHeader>
         <CardTitle>รายการจองวันที่ {formattedDate}</CardTitle>
         <CardDescription>แสดงรายละเอียดการจองทั้งหมด</CardDescription>

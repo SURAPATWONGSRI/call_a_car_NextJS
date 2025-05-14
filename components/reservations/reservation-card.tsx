@@ -166,7 +166,7 @@ const ReservationCard = ({
   };
 
   return (
-    <div className="border rounded-lg p-4">
+    <div className="border bg-background rounded-lg p-4">
       <div className="flex flex-col sm:flex-row justify-between mb-4">
         <div>
           <h3 className="font-bold text-lg">เลขที่จอง #{reservation.id}</h3>
@@ -226,12 +226,16 @@ const ReservationCard = ({
           <div className="rounded-md  p-2 text-sm">
             <div className="flex items-center">
               <span className="font-medium mr-1">เวลา:</span>{" "}
-              {reservation.timeStart || "-"}
+              <span className="text-primary">
+                {reservation.timeStart || "-"}
+              </span>
             </div>
             {reservation.pickupLocation && (
               <div className="flex items-center mt-1">
                 <span className="font-medium mr-1">ที่:</span>{" "}
-                {reservation.pickupLocation}
+                <span className="text-muted-foreground">
+                  {reservation.pickupLocation}
+                </span>
               </div>
             )}
           </div>
@@ -244,12 +248,14 @@ const ReservationCard = ({
           <div className="rounded-md  p-2 text-sm">
             <div className="flex items-center">
               <span className="font-medium mr-1">เวลา:</span>{" "}
-              {reservation.timeEnd || "-"}
+              <span className="text-primary">{reservation.timeEnd || "-"}</span>
             </div>
             {reservation.dropoffLocation && (
               <div className="flex items-center mt-1">
                 <span className="font-medium mr-1">ที่:</span>{" "}
-                {reservation.dropoffLocation}
+                <span className="text-muted-foreground">
+                  {reservation.dropoffLocation}
+                </span>
               </div>
             )}
           </div>
@@ -260,17 +266,21 @@ const ReservationCard = ({
         <div className="mt-3 border-t pt-3">
           <div className="flex items-start gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <div className="flex-1">
+            <div className="flex-1 space-y-2">
               {reservation.pickupLocation && (
                 <div className="mb-2">
-                  <p className="text-sm text-muted-foreground">จุดรับ</p>
-                  <p className="font-medium">{reservation.pickupLocation}</p>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    จุดรับ
+                  </p>
+                  <p className="text-sm">{reservation.pickupLocation}</p>
                 </div>
               )}
               {reservation.dropoffLocation && (
                 <div>
-                  <p className="text-sm text-muted-foreground">จุดส่ง</p>
-                  <p className="font-medium">{reservation.dropoffLocation}</p>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    จุดส่ง
+                  </p>
+                  <p className="text-sm">{reservation.dropoffLocation}</p>
                 </div>
               )}
             </div>

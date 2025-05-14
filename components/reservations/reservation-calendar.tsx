@@ -37,7 +37,7 @@ const ReservationCalendar = ({
   };
 
   return (
-    <Card className="lg:col-span-1">
+    <Card className="lg:col-span-1 bg-background">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>

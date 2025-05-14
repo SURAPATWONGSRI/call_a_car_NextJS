@@ -1,4 +1,5 @@
 import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb";
+import { ModeToggle } from "@/components/toggletheme";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -12,6 +13,9 @@ export function AdminHeader() {
         <Breadcrumb>
           <DynamicBreadcrumb />
         </Breadcrumb>
+      </div>
+      <div className="flex items-center gap-4 px-4">
+        <ModeToggle />
       </div>
     </header>
   );

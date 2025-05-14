@@ -30,7 +30,7 @@ const data = {
     name: "wakim",
     role: "admin",
     avatar:
-      "https://scontent.fbkk5-5.fna.fbcdn.net/v/t39.30808-6/486866698_2452730145067243_2758720085003566629_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHIvsoiDAayw8Kx2uIUgT00W9RCQDEfAp9b1EJAMR8Cn7fgG61MwdOrp22_04M9-YIEhm817HSLUNJvjUYuM_S2&_nc_ohc=45UlmWNH2TwQ7kNvwHXEE8N&_nc_oc=AdmA6rD-NQz1DZnP83ujAbvtZJhL0l8xAehRR5hdF16FwQLQDTLv7Eho0cOJUjnekgl5XrCrv_EppxoKfLMv94a5&_nc_zt=23&_nc_ht=scontent.fbkk5-5.fna&_nc_gid=tpRh0NJ2BdbWZHevtYwu2A&oh=00_AfLdwiMPg0cLbP27j0M0M1DRcj_fKbJ_k6cIlKjqmWf77Q&oe=6822F76B",
+      "https://armzdhwelkuwwftkvoap.supabase.co/storage/v1/object/public/profile//avatar.png",
   },
 
   navMain: [

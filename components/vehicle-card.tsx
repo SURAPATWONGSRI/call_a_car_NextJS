@@ -28,7 +28,7 @@ export const VehicleCard = ({
   onDelete,
 }: VehicleCardProps) => {
   return (
-    <Card className="overflow-hidden h-[650px] flex flex-col">
+    <Card className="overflow-hidden h-[650px] flex bg-background flex-col">
       <CardHeader className="p-4 pt-2 md:p-4">
         <CardTitle className="text-xl truncate">
           {brand} {model || ""} {variant || ""}
@@ -43,9 +43,11 @@ export const VehicleCard = ({
             <Image
               src={imageUrl}
               width={400}
-              height={400}
+              height={200}
               alt={`${brand}-${type}`}
-              className="object-cover "
+              className="object-cover w-full h-auto"
+              style={{ maxHeight: "100%" }}
+              priority
             />
           </div>
         ) : (
