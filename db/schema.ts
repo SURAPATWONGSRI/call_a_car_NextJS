@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -99,7 +99,40 @@ export const reservations = pgTable("reservations", {
   // สถานะการจอง
   status: reservationStatusEnum("status").notNull().default("pending"),
 
+  // Flag สำหรับ soft delete
+  active: boolean("active").default(true),
+
   imageUrl: varchar("image_url", { length: 255 }), // เพิ่ม imageUrl เป็น string
   createdAt,
   updatedAt,
 });
+
+export const reservationsRelations = relations(reservations, ({ one }) => ({
+  customer: one(customers, {
+    fields: [reservations.customerId],
+    references: [customers.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [reservations.vehicleId],
+    references: [vehicles.id],
+  }),
+  driver: one(drivers, {
+    fields: [reservations.driverId],
+    references: [drivers.id],
+  }),
+}));
+
+// Define relations for customers table
+export const customersRelations = relations(customers, ({ many }) => ({
+  reservations: many(reservations),
+}));
+
+// Define relations for vehicles table
+export const vehiclesRelations = relations(vehicles, ({ many }) => ({
+  reservations: many(reservations),
+}));
+
+// Define relations for drivers table
+export const driversRelations = relations(drivers, ({ many }) => ({
+  reservations: many(reservations),
+}));
