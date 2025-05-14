@@ -25,6 +25,8 @@ export interface Reservation {
   driver?: {
     id: string;
     name: string;
+    phone?: string;
+    imageUrl?: string;
   } | null;
   customer?: {
     id: string;

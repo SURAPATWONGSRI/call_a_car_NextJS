@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const { name, phone } = body;
 
     if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+      return NextResponse.json({ error: "ต้องระบุชื่อ" }, { status: 400 });
     }
 
     // Check for duplicate name and phone
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     if (existingCustomer) {
       return NextResponse.json(
-        { error: "Customer with this name and phone already exists" },
+        { error: "ลูกค้าที่มีชื่อและเบอร์โทรศัพท์นี้อยู่แล้ว" },
         { status: 409 }
       );
     }

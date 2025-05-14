@@ -57,8 +57,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
-    // Validate required fields
     const { reservedByName, date, timeStart, timeEnd } = body;
 
     if (!reservedByName || !date || !timeStart || !timeEnd) {
@@ -68,20 +66,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate custom ID: C + random alphanumeric string
-    // This creates a string like "C3f7a2b1" using random values
-    const randomString = Math.random().toString(36).substring(2, 10);
-    const generatedCustomerId = `C${randomString}`;
-
-    // Use customerId from the request if provided, otherwise use the generated one
-    const customerId = body.customerId || generatedCustomerId;
+    const customerId = body.customerId;
 
     const newReservation = await db
       .insert(reservations)
       .values({
         customerId,
         reservedByName,
-        date: sql`${date}::timestamp`, // Use the date from the request
+        date: sql`(NOW() AT TIME ZONE 'Asia/Bangkok')`,
         timeStart,
         timeEnd,
         purpose: body.purpose || null,
@@ -98,7 +90,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newReservation[0], { status: 201 });
   } catch (error) {
     console.error("Error creating reservation:", error);
-    // Add more detailed error information
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     return NextResponse.json(

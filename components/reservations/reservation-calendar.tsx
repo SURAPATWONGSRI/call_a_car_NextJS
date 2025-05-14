@@ -1,8 +1,6 @@
-import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -14,11 +12,29 @@ import { CalendarIcon } from "lucide-react";
 interface ReservationCalendarProps {
   date: Date;
   setDate: (date: Date) => void;
+  highlightedDates?: Date[]; // Dates that have reservations
 }
 
-const ReservationCalendar = ({ date, setDate }: ReservationCalendarProps) => {
+const ReservationCalendar = ({
+  date,
+  setDate,
+  highlightedDates = [],
+}: ReservationCalendarProps) => {
   // Format the selected date for display
   const formattedDate = format(date, "EEEE dd MMMM yyyy", { locale: th });
+
+  // Custom modifiers for the calendar
+  const modifiers = {
+    highlighted: highlightedDates,
+  };
+
+  // Custom day rendering to show indicators for dates with reservations
+  const modifiersStyles = {
+    highlighted: {
+      backgroundColor: "rgba(var(--primary), 0.1)",
+      fontWeight: "bold",
+    },
+  };
 
   return (
     <Card className="lg:col-span-1">
@@ -32,21 +48,35 @@ const ReservationCalendar = ({ date, setDate }: ReservationCalendarProps) => {
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="mb-4">
-          <Badge variant="outline" className="text-sm py-1 px-3 bg-slate-50">
-            {formattedDate}
-          </Badge>
-        </div>
+      <Calendar
+        mode="single"
+        selected={date}
+        onSelect={(d) => d && setDate(d)}
+        className="rounded-lg border mx-auto max-w-full"
+        locale={th}
+        modifiers={modifiers}
+        modifiersStyles={modifiersStyles}
+        components={{
+          DayContent: ({ date }) => {
+            // Check if this date has reservations
+            const hasReservations = highlightedDates.some(
+              (d) =>
+                d.getDate() === date.getDate() &&
+                d.getMonth() === date.getMonth() &&
+                d.getFullYear() === date.getFullYear()
+            );
 
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={(d) => d && setDate(d)}
-          className="rounded-lg border shadow-sm mx-auto max-w-full"
-          locale={th}
-        />
-      </CardContent>
+            return (
+              <div className="relative w-full h-full flex items-center justify-center">
+                <span>{date.getDate()}</span>
+                {hasReservations && (
+                  <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary"></div>
+                )}
+              </div>
+            );
+          },
+        }}
+      />
     </Card>
   );
 };

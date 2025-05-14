@@ -125,7 +125,6 @@ export async function DELETE(
       .update(drivers)
       .set({
         active: false,
-        updatedAt: new Date(),
       })
       .where(eq(drivers.id, id));
 

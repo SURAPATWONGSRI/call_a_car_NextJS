@@ -220,7 +220,7 @@ export function CustomersDataTable({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  <div className="flex justify-center items-center">
+                  <div className="flex justify-center text-muted-foreground items-center">
                     <span className="ml-2">กำลังโหลดข้อมูล...</span>
                   </div>
                 </TableCell>

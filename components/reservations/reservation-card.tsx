@@ -24,7 +24,10 @@ const ReservationCard = ({
       })`
     : "ไม่ระบุ";
 
-  // Format the driver display string
+  const imgDriverDisplay = reservation.driver
+    ? reservation.driver.imageUrl
+    : null;
+
   const driverDisplay = reservation.driver
     ? reservation.driver.name
     : "ไม่ระบุ";
@@ -192,7 +195,14 @@ const ReservationCard = ({
 
         <div className="space-y-1">
           <div className="text-sm font-medium text-muted-foreground">คนขับ</div>
-          <div className="rounded-md  p-2 text-sm flex items-center">
+          <div className="rounded-md p-2 text-sm flex items-center">
+            {imgDriverDisplay && (
+              <img
+                src={imgDriverDisplay}
+                alt="Driver"
+                className="w-8 h-8 rounded-full mr-2 object-cover"
+              />
+            )}
             {driverDisplay}
           </div>
         </div>
