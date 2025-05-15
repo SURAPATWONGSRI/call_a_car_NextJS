@@ -8,7 +8,8 @@ import {
 import { Reservation } from "@/types/reservation";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import useSWR from "swr";
 import ReservationCard from "./reservation-card";
 
 interface ReservationListProps {
@@ -16,49 +17,29 @@ interface ReservationListProps {
 }
 
 const ReservationList = ({ date }: ReservationListProps) => {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
   // Format date for display
   const formattedDate = format(date, "dd MMMM yyyy", { locale: th });
 
-  // Fetch reservations
-  useEffect(() => {
-    const fetchReservations = async () => {
-      setIsLoading(true);
-      setError(null);
+  // Use SWR to fetch and cache reservation data
+  const { data, error, isLoading } = useSWR("/api/reservations");
 
-      try {
-        const response = await fetch("/api/reservations");
+  // Filter reservations for the selected date with useMemo for performance
+  const filteredReservations = useMemo(() => {
+    if (!data) return [];
 
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
+    const selectedDateStr = format(date, "yyyy-MM-dd");
+    return data.filter((reservation: Reservation) => {
+      const reservationDate = reservation.date.split("T")[0];
+      return reservationDate === selectedDateStr;
+    });
+  }, [data, date]);
 
-        const data = await response.json();
-
-        // Filter reservations for the selected date
-        // This assumes the date from API is in ISO format
-        const selectedDateStr = format(date, "yyyy-MM-dd");
-        const filteredReservations = data.filter((reservation: Reservation) => {
-          const reservationDate = reservation.date.split("T")[0];
-          return reservationDate === selectedDateStr;
-        });
-
-        setReservations(filteredReservations);
-      } catch (err) {
-        console.error("Failed to fetch reservations:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load reservations"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchReservations();
-  }, [date]);
+  // Prepare error message if any
+  const errorMessage = error
+    ? error instanceof Error
+      ? error.message
+      : "Failed to load reservations"
+    : null;
 
   return (
     <Card className="lg:col-span-2 bg-background">
@@ -71,11 +52,11 @@ const ReservationList = ({ date }: ReservationListProps) => {
           <div className="flex justify-center items-center py-8">
             <p className="text-muted-foreground">กำลังโหลดข้อมูล...</p>
           </div>
-        ) : error ? (
+        ) : errorMessage ? (
           <div className="flex justify-center items-center py-8 text-red-500">
-            <p>{error}</p>
+            <p>{errorMessage}</p>
           </div>
-        ) : reservations.length === 0 ? (
+        ) : filteredReservations.length === 0 ? (
           <div className="flex justify-center items-center py-8">
             <p className="text-muted-foreground">
               ไม่พบรายการจองสำหรับวันที่เลือก
@@ -83,7 +64,7 @@ const ReservationList = ({ date }: ReservationListProps) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {reservations.map((reservation) => (
+            {filteredReservations.map((reservation) => (
               <ReservationCard key={reservation.id} reservation={reservation} />
             ))}
           </div>

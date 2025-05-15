@@ -8,16 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Driver } from "@/types/driver";
 import { PlusCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
 
 import * as z from "zod";
+
+// Create a fetcher function for SWR
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch drivers");
+  return res.json();
+};
 
 const DriversPage = () => {
   const [open, setOpen] = useState(false);
   const [editFormOpen, setEditFormOpen] = useState(false);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -28,27 +34,24 @@ const DriversPage = () => {
   const searchParams = useSearchParams();
   const editParam = searchParams.get("edit");
 
-  // Split the data fetching and edit param handling into separate effects
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/drivers");
-        if (!response.ok) {
-          throw new Error("Failed to fetch drivers");
-        }
-        const data = await response.json();
-        setDrivers(data);
-      } catch (error) {
-        console.error("Error fetching drivers:", error);
-        toast.error("ไม่สามารถโหลดรายชื่อคนขับรถได้");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Use SWR for data fetching with caching
+  const {
+    data: drivers = [],
+    error: fetchError,
+    isLoading: loading,
+    mutate,
+  } = useSWR("/api/drivers", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10000, // Avoid refetching within 10 seconds
+  });
 
-    fetchDrivers();
-  }, []); // Remove editParam dependency
+  // Show error toast if fetch fails
+  useEffect(() => {
+    if (fetchError) {
+      toast.error("ไม่สามารถโหลดรายชื่อคนขับรถได้");
+      console.error("Error fetching drivers:", fetchError);
+    }
+  }, [fetchError]);
 
   // Handle the edit parameter in a separate effect
   useEffect(() => {
@@ -70,11 +73,9 @@ const DriversPage = () => {
   ) {
     try {
       setIsSubmitting(true);
-
-      // Add default active value to the submission
       const driverData = {
         ...values,
-        active: true, // Set default to true when submitting
+        active: true,
       };
 
       const response = await fetch("/api/drivers", {
@@ -101,10 +102,7 @@ const DriversPage = () => {
           };
         }
       }
-
-      // Add the new driver to the list
-      setDrivers((prev) => [...prev, data]);
-
+      mutate();
       // Show success toast
       toast.success("สำเร็จ", {
         description: `คุณได้เพิ่ม ${data.name} เรียบร้อยแล้ว`,
@@ -126,7 +124,6 @@ const DriversPage = () => {
     setSelectedDriver(driver);
     setEditFormOpen(true);
 
-    // Update URL with edit param but avoid refreshing the table
     const newUrl = `/admin/drivers?edit=${driver.id}`;
     window.history.pushState({}, "", newUrl);
   };
@@ -144,7 +141,7 @@ const DriversPage = () => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(async () => {
     if (!driverToDelete) return;
 
     try {
@@ -158,10 +155,8 @@ const DriversPage = () => {
         throw new Error(data.error || "Failed to delete driver");
       }
 
-      // Remove the driver from the list
-      setDrivers((prev) =>
-        prev.filter((driver) => driver.id !== driverToDelete.id)
-      );
+      // Refresh data using SWR's mutate
+      mutate();
 
       // Show success toast
       toast.success("สำเร็จ", {
@@ -175,7 +170,7 @@ const DriversPage = () => {
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [driverToDelete, mutate]);
 
   async function handleDriverUpdate(
     values: z.infer<
@@ -203,10 +198,8 @@ const DriversPage = () => {
         };
       }
 
-      // Update the driver in the list
-      setDrivers((prev) =>
-        prev.map((driver) => (driver.id === driverId ? data : driver))
-      );
+      // Refresh data using SWR's mutate
+      mutate();
 
       // Show success toast
       toast.success("สำเร็จ", {
@@ -253,7 +246,6 @@ const DriversPage = () => {
         />
       </div>
 
-      {/* Use the updated DriverForm component */}
       <DriverForm
         open={open}
         onOpenChange={setOpen}
@@ -261,7 +253,6 @@ const DriversPage = () => {
         isSubmitting={isSubmitting}
       />
 
-      {/* Add the new EditDriverForm component */}
       <EditDriverForm
         open={editFormOpen}
         onOpenChange={handleEditFormOpenChange}
@@ -270,7 +261,6 @@ const DriversPage = () => {
         isSubmitting={isSubmitting}
       />
 
-      {/* Add the Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

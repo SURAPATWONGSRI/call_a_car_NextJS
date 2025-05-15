@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { customers } from "@/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
@@ -31,21 +31,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "ต้องระบุชื่อ" }, { status: 400 });
     }
 
-    // Check for duplicate name and phone
+    // ตรวจสอบลูกค้าที่มีชื่อหรือเบอร์โทรซ้ำ
+    const conditions = [];
+
+    if (name) {
+      conditions.push(eq(customers.name, name));
+    }
+
+    if (phone) {
+      conditions.push(eq(customers.phone, phone));
+    }
+
+    // ถ้ามีทั้งชื่อและเบอร์โทร ตรวจสอบว่ามีอันใดอันหนึ่งซ้ำ
     const existingCustomer = await db
       .select()
       .from(customers)
-      .where(
-        and(
-          eq(customers.name, name),
-          phone ? eq(customers.phone, phone) : undefined
-        )
-      )
+      .where(conditions.length > 1 ? or(...conditions) : conditions[0])
+      .limit(1)
       .then((res) => res[0] || null);
 
     if (existingCustomer) {
       return NextResponse.json(
-        { error: "ลูกค้าที่มีชื่อและเบอร์โทรศัพท์นี้อยู่แล้ว" },
+        { error: "ลูกค้าที่มีชื่อหรือเบอร์โทรศัพท์นี้มีอยู่แล้ว" },
         { status: 409 }
       );
     }
@@ -61,9 +68,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newCustomer, { status: 201 });
   } catch (error) {
-    console.error("มีข้อมูลซ้ำกันแล้วอยู่ในฐานข้อมูล :", error);
+    console.error("เกิดข้อผิดพลาดในการเพิ่มลูกค้า:", error);
     return NextResponse.json(
-      { error: "มีข้อมูลซ้ำกันแล้วอยู่ในฐานข้อมูล" },
+      { error: "เกิดข้อผิดพลาดในการเพิ่มลูกค้า" },
       { status: 500 }
     );
   }

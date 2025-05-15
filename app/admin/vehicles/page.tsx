@@ -9,21 +9,50 @@ import { VehicleCard } from "@/components/vehicle-card";
 import { Vehicle } from "@/types/vehicle";
 import { PlusCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
+
+// Create a fetcher function for SWR
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+  const data = await res.json();
+
+  // Handle different response formats
+  if (Array.isArray(data)) {
+    return data;
+  } else if (data && typeof data === "object") {
+    if (Array.isArray(data.data)) {
+      return data.data;
+    } else if (data.vehicles && Array.isArray(data.vehicles)) {
+      return data.vehicles;
+    }
+  }
+  console.error("Unexpected API response structure:", data);
+  return [];
+};
 
 const VehiclesPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [vehicleToDelete, setVehicleToDelete] = useState<number | null>(null);
   const [isDeletingVehicle, setIsDeletingVehicle] = useState<boolean>(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
+
+  // Use SWR for data fetching with caching
+  const {
+    data: vehicles = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR("/api/vehicles", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10000, // Avoid refetching within 10 seconds
+  });
 
   // Check if there's an ID in the URL to open edit dialog automatically
   useEffect(() => {
@@ -46,112 +75,67 @@ const VehiclesPage = () => {
     }
   }, [isEditDialogOpen, router, searchParams]);
 
-  const fetchVehicles = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/vehicles");
+  const handleEditVehicle = useCallback(
+    (vehicle: Vehicle) => {
+      setSelectedVehicle(vehicle);
+      setIsEditDialogOpen(true);
+      // Update URL to reflect the edited vehicle (for sharing/bookmarking)
+      router.push(`/admin/vehicles?edit=${vehicle.id}`, { scroll: false });
+    },
+    [router]
+  );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Check and handle different response structures
-      if (Array.isArray(data)) {
-        setVehicles(data);
-      } else if (data && typeof data === "object") {
-        // Check if data contains vehicles array in a nested property
-        if (Array.isArray(data.data)) {
-          setVehicles(data.data);
-        } else if (data.vehicles && Array.isArray(data.vehicles)) {
-          setVehicles(data.vehicles);
-        } else {
-          // If we can't find an array, log the structure and set an empty array
-          console.error("Unexpected API response structure:", data);
-          setVehicles([]);
-        }
-      } else {
-        console.error("Invalid API response:", data);
-        setVehicles([]);
-      }
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch vehicles");
-      console.error("Error fetching vehicles:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
-
-  const handleEditVehicle = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
-    setIsEditDialogOpen(true);
-    // Update URL to reflect the edited vehicle (for sharing/bookmarking)
-    router.push(`/admin/vehicles?edit=${vehicle.id}`, { scroll: false });
-  };
-
-  const handleDeleteVehicle = (id: number) => {
+  const handleDeleteVehicle = useCallback((id: number) => {
     setVehicleToDelete(id);
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const saveVehicle = async (updatedVehicle: Vehicle) => {
-    try {
-      // Use the correct endpoint with ID for PUT requests
-      const response = await fetch(`/api/vehicles/${updatedVehicle.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedVehicle),
-      });
-
-      if (!response.ok) {
-        // Better error handling for non-200 responses
-        let errorMessage = `Failed to update vehicle (Status: ${response.status})`;
-        try {
-          const errorData = await response.json();
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } catch (jsonError) {
-          console.error("Error parsing error response:", jsonError);
-        }
-        throw new Error(errorMessage);
-      }
-
-      // More robust JSON parsing
-      let data;
+  const saveVehicle = useCallback(
+    async (updatedVehicle: Vehicle) => {
       try {
-        data = await response.json();
-      } catch (jsonError) {
-        console.error("Error parsing success response:", jsonError);
-        throw new Error("Invalid response format from server");
+        // Use the correct endpoint with ID for PUT requests
+        const response = await fetch(`/api/vehicles/${updatedVehicle.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedVehicle),
+        });
+
+        if (!response.ok) {
+          // Better error handling for non-200 responses
+          let errorMessage = `Failed to update vehicle (Status: ${response.status})`;
+          try {
+            const errorData = await response.json();
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch (jsonError) {
+            console.error("Error parsing error response:", jsonError);
+          }
+          throw new Error(errorMessage);
+        }
+
+        await response.json();
+
+        // Refresh the data using SWR's mutate
+        mutate();
+
+        toast("Vehicle updated", {
+          description: "The vehicle has been updated successfully.",
+        });
+      } catch (error) {
+        console.error("Error updating vehicle:", error);
+        toast.error("Error", {
+          description:
+            error instanceof Error ? error.message : "Failed to update vehicle",
+        });
       }
+    },
+    [mutate]
+  );
 
-      // Update the vehicles list with the updated vehicle
-      setVehicles(
-        vehicles.map((v) => (v.id === updatedVehicle.id ? data.vehicle : v))
-      );
-
-      toast("Vehicle updated", {
-        description: "The vehicle has been updated successfully.",
-      });
-    } catch (error) {
-      console.error("Error updating vehicle:", error);
-      toast.error("Error", {
-        description:
-          error instanceof Error ? error.message : "Failed to update vehicle",
-      });
-    }
-  };
-
-  const confirmDeleteVehicle = async () => {
+  const confirmDeleteVehicle = useCallback(async () => {
     if (!vehicleToDelete) return;
 
     setIsDeletingVehicle(true);
@@ -174,8 +158,8 @@ const VehiclesPage = () => {
         throw new Error(errorMessage);
       }
 
-      // Remove the vehicle from the list
-      setVehicles(vehicles.filter((vehicle) => vehicle.id !== vehicleToDelete));
+      // Refresh the data using SWR's mutate
+      mutate();
 
       toast.success("Vehicle deleted", {
         description: "The vehicle has been deleted successfully.",
@@ -191,11 +175,12 @@ const VehiclesPage = () => {
       setIsDeleteDialogOpen(false);
       setVehicleToDelete(null);
     }
-  };
+  }, [vehicleToDelete, mutate]);
 
-  const handleAddVehicle = (newVehicle: Vehicle) => {
-    setVehicles([...vehicles, newVehicle]);
-  };
+  const handleAddVehicle = useCallback(() => {
+    // Simply refresh the data using SWR's mutate after adding
+    mutate();
+  }, [mutate]);
 
   return (
     <div className="w-full space-y-4 sm:space-y-6 md:space-y-8">
@@ -220,7 +205,7 @@ const VehiclesPage = () => {
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          <p>เกิดข้อผิดพลาด: {error}</p>
+          <p>เกิดข้อผิดพลาด: {error.message}</p>
           <p className="text-sm">กรุณาลองใหม่อีกครั้ง</p>
         </div>
       )}

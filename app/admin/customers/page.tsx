@@ -5,82 +5,73 @@ import { CustomersDataTable } from "@/components/customers/customers-data-table"
 import { EditCustomerDialog } from "@/components/customers/edit-customer-dialog";
 import { Customer } from "@/types/customers";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
+
+// Create a fetcher function for SWR
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Error: ${res.status}`);
+  return res.json();
+};
 
 const CustomersPage = () => {
   const [searchValue, setSearchValue] = useState("");
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const fetchCustomers = async () => {
-    setIsLoading(true);
-    setError(null);
+  // Use SWR for data fetching with caching
+  const {
+    data: customers = [],
+    error: fetchError,
+    isLoading,
+    mutate,
+  } = useSWR("/api/customers", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10000, // Avoid refetching the same data within 10 seconds
+  });
 
-    try {
-      const response = await fetch("/api/customers");
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setCustomers(data);
-    } catch (err) {
-      console.error("Failed to fetch customers:", err);
-      setError("ไม่สามารถดึงข้อมูลลูกค้าได้ กรุณาลองอีกครั้ง");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
+  const error = fetchError
+    ? "ไม่สามารถดึงข้อมูลลูกค้าได้ กรุณาลองอีกครั้ง"
+    : null;
 
   const handleCustomerAdded = () => {
-    fetchCustomers();
+    mutate();
   };
 
   const handleCustomerUpdated = () => {
-    fetchCustomers();
+    mutate();
   };
 
   const handleEditCustomer = (customer: Customer) => {
     router.push(`/admin/customers?edit=${customer.id}`, { scroll: false });
   };
 
-  const handleDeleteCustomer = async (customerId: string) => {
-    setIsLoading(true);
-    setError(null);
+  const handleDeleteCustomer = useCallback(
+    async (customerId: string) => {
+      try {
+        const response = await fetch(`/api/customers/${customerId}`, {
+          method: "DELETE",
+        });
 
-    try {
-      const response = await fetch(`/api/customers/${customerId}`, {
-        method: "DELETE",
-      });
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        toast.success("ลบข้อมูลลูกค้าสำเร็จ", {
+          description: `ข้อมูลได้ถูกลบเรียบร้อยแล้ว`,
+        });
+
+        mutate(); // Revalidate data after deletion
+      } catch (err) {
+        toast.error("เกิดข้อผิดพลาดในการลบข้อมูลลูกค้า", {
+          description: "กรุณาลองอีกครั้ง",
+        });
+        console.error("Failed to delete customer:", err);
       }
-
-      // Show success toast notification
-      toast.success("ลบข้อมูลลูกค้าสำเร็จ", {
-        description: `ข้อมูลได้ถูกลบเรียบร้อยแล้ว`,
-      });
-
-      // Refresh the customer list after successful deletion
-      fetchCustomers();
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการลบข้อมูลลูกค้า", {
-        description: "กรุณาลองอีกครั้ง",
-      });
-      console.error("Failed to delete customer:", err);
-      setError("ไม่สามารถลบข้อมูลลูกค้าได้ กรุณาลองอีกครั้ง");
-      setIsLoading(false);
-    }
-  };
+    },
+    [mutate]
+  );
 
   return (
     <div className="space-y-6 md:space-y-8 w-full">
