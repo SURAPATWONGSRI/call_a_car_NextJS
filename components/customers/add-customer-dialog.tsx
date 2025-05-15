@@ -112,7 +112,7 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button className="gap-1">
+          <Button className="gap-1 " size={"lg"}>
             <PlusCircle className="h-4 w-4" />
             เพิ่มลูกค้า
           </Button>

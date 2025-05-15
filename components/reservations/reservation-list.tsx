@@ -8,7 +8,8 @@ import {
 import { Reservation } from "@/types/reservation";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
+import useSWR from "swr";
 import ReservationCard from "./reservation-card";
 
 interface ReservationListProps {
@@ -16,49 +17,41 @@ interface ReservationListProps {
 }
 
 const ReservationList = ({ date }: ReservationListProps) => {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
   // Format date for display
   const formattedDate = format(date, "dd MMMM yyyy", { locale: th });
+  const selectedDateStr = format(date, "yyyy-MM-dd");
 
-  // Fetch reservations
-  useEffect(() => {
-    const fetchReservations = async () => {
-      setIsLoading(true);
-      setError(null);
+  // Use SWR to fetch and cache data
+  const { data, error, isLoading, mutate } = useSWR("/api/reservations");
 
-      try {
-        const response = await fetch("/api/reservations");
+  // Filter reservations for the selected date
+  const filteredReservations = useMemo(() => {
+    if (!data) return [];
 
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
+    return data.filter((reservation: Reservation) => {
+      const reservationDate = reservation.date.split("T")[0];
+      return reservationDate === selectedDateStr;
+    });
+  }, [data, selectedDateStr]);
 
-        const data = await response.json();
+  // Handle reservation status changes
+  const handleStatusChange = useCallback(
+    (updatedReservation: Reservation) => {
+      // Update the local data immediately for a responsive UI
+      if (!data) return;
 
-        // Filter reservations for the selected date
-        // This assumes the date from API is in ISO format
-        const selectedDateStr = format(date, "yyyy-MM-dd");
-        const filteredReservations = data.filter((reservation: Reservation) => {
-          const reservationDate = reservation.date.split("T")[0];
-          return reservationDate === selectedDateStr;
-        });
+      const updatedData = data.map((item: Reservation) =>
+        item.id === updatedReservation.id ? updatedReservation : item
+      );
 
-        setReservations(filteredReservations);
-      } catch (err) {
-        console.error("Failed to fetch reservations:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load reservations"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      // Update the cached data without revalidation
+      mutate(updatedData, false);
 
-    fetchReservations();
-  }, [date]);
+      // Then revalidate after a short delay (optimistic update pattern)
+      setTimeout(() => mutate(), 2000);
+    },
+    [data, mutate]
+  );
 
   return (
     <Card className="lg:col-span-2 bg-background">
@@ -73,9 +66,13 @@ const ReservationList = ({ date }: ReservationListProps) => {
           </div>
         ) : error ? (
           <div className="flex justify-center items-center py-8 text-red-500">
-            <p>{error}</p>
+            <p>
+              {error instanceof Error
+                ? error.message
+                : "เกิดข้อผิดพลาดในการโหลดข้อมูล"}
+            </p>
           </div>
-        ) : reservations.length === 0 ? (
+        ) : filteredReservations.length === 0 ? (
           <div className="flex justify-center items-center py-8">
             <p className="text-muted-foreground">
               ไม่พบรายการจองสำหรับวันที่เลือก
@@ -83,8 +80,12 @@ const ReservationList = ({ date }: ReservationListProps) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {reservations.map((reservation) => (
-              <ReservationCard key={reservation.id} reservation={reservation} />
+            {filteredReservations.map((reservation) => (
+              <ReservationCard
+                key={reservation.id}
+                reservation={reservation}
+                onStatusChange={handleStatusChange}
+              />
             ))}
           </div>
         )}

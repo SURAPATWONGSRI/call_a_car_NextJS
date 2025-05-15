@@ -36,6 +36,13 @@
       "when": 1747167126730,
       "tag": "0004_flawless_greymalkin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1747283754842,
+      "tag": "0005_bored_magneto",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils/date";
 import { Loader2, MapPin, Users } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { useSWRConfig } from "swr";
 
 import { Reservation } from "@/types/reservation";
 
@@ -17,6 +17,7 @@ const ReservationCard = ({
 }: ReservationCardProps) => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const { mutate } = useSWRConfig(); // Get the mutate function from SWR
 
   // Format the vehicle display string
   const vehicleDisplay = reservation.vehicle
@@ -40,6 +41,22 @@ const ReservationCard = ({
     if (!phone) return "";
     // Format the phone number as needed
     return phone.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  };
+
+  // Format date to display as DD/MM/YYYY
+  const formatDateDisplay = (dateString: string) => {
+    if (!dateString) return "ไม่ระบุ";
+
+    try {
+      // Parse the date string (expected format: YYYY-MM-DD)
+      const [year, month, day] = dateString.split("-");
+
+      // Format as DD/MM/YYYY
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString; // Return original if formatting fails
+    }
   };
 
   // Determine status color
@@ -72,98 +89,85 @@ const ReservationCard = ({
 
   const statusColor = getStatusColor(status);
 
-  // Function to update reservation status
-  const updateReservationStatus = async (newStatus: string) => {
-    if (!reservation.id) return;
+  // Function to update reservation status - optimized version
+  const updateReservationStatus = useCallback(
+    async (newStatus: string) => {
+      if (!reservation.id) return;
 
-    const isConfirmAction = newStatus === "confirmed";
+      const isConfirmAction = newStatus === "confirmed";
 
-    if (isConfirmAction) {
-      setIsConfirming(true);
-    } else {
-      setIsCancelling(true);
-    }
-
-    try {
-      // Log the request details
-      console.log(
-        `Attempting to update reservation ${reservation.id} to ${newStatus}`
-      );
-
-      // Create the request data
-      const requestData = { status: newStatus };
-      console.log("Request payload:", requestData);
-
-      // Send the update request with explicit no-cache options
-      const response = await fetch(`/api/reservations/${reservation.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-        },
-        body: JSON.stringify(requestData),
-        cache: "no-store",
-      });
-
-      console.log(`Response status: ${response.status} ${response.statusText}`);
-
-      // Handle non-OK responses without trying to parse them
-      if (!response.ok) {
-        throw new Error(
-          `Update failed: Server returned ${response.status} ${response.statusText}`
-        );
+      if (isConfirmAction) {
+        setIsConfirming(true);
+      } else {
+        setIsCancelling(true);
       }
 
-      // Update locally without trying to parse the response
-      console.log("Update successful, updating local state");
+      try {
+        // Create the request data
+        const requestData = { status: newStatus };
 
-      // Update the local state directly
-      const updatedReservation = {
-        ...reservation,
-        status: newStatus,
-      };
-
-      if (onStatusChange) {
-        // Call the callback if provided
-        onStatusChange(updatedReservation);
-      } else {
-        // Show success message and refresh
-        toast.success(`อัพเดทสถานะเป็น "${newStatus}" สำเร็จ`, {
-          description: "การเปลี่ยนแปลงจะมีผลทันที",
+        // Send the update request
+        const response = await fetch(`/api/reservations/${reservation.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
         });
 
-        // Force refresh after a short delay
-        console.log("Scheduling page refresh");
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        // Handle non-OK responses
+        if (!response.ok) {
+          throw new Error(
+            `Update failed: Server returned ${response.status} ${response.statusText}`
+          );
+        }
+
+        // Update the local state directly
+        const updatedReservation = {
+          ...reservation,
+          status: newStatus,
+        };
+
+        // Show success toast
+        toast.success(`อัพเดทสถานะเป็น "${newStatus}" สำเร็จ`, {
+          description: "การเปลี่ยนแปลงมีผลแล้ว",
+        });
+
+        if (onStatusChange) {
+          // Call the callback if provided
+          onStatusChange(updatedReservation);
+        }
+
+        // Revalidate SWR cache for both the specific reservation and the list of reservations
+        mutate(`/api/reservations/${reservation.id}`);
+        mutate("/api/reservations"); // This revalidates the main reservations list
+      } catch (error) {
+        // Log and display error
+        console.error("Error updating reservation status:", error);
+        toast.error("เกิดข้อผิดพลาด", {
+          description:
+            error instanceof Error ? error.message : "ไม่สามารถอัพเดทสถานะได้",
+        });
+      } finally {
+        if (isConfirmAction) {
+          setIsConfirming(false);
+        } else {
+          setIsCancelling(false);
+        }
       }
-    } catch (error) {
-      // Log and display error
-      console.error("Error updating reservation status:", error);
-      toast.error("เกิดข้อผิดพลาด", {
-        description:
-          error instanceof Error ? error.message : "ไม่สามารถอัพเดทสถานะได้",
-      });
-    } finally {
-      if (isConfirmAction) {
-        setIsConfirming(false);
-      } else {
-        setIsCancelling(false);
-      }
-    }
-  };
+    },
+    [reservation, onStatusChange, mutate]
+  );
 
   // Handle confirm button click
-  const handleConfirm = () => {
-    updateReservationStatus("confirmed"); // Change from "success" to "confirmed"
-  };
+  const handleConfirm = useCallback(() => {
+    updateReservationStatus("confirmed");
+  }, [updateReservationStatus]);
 
   // Handle cancel button click
-  const handleCancel = () => {
-    updateReservationStatus("cancelled"); // Change from "ยกเลิก" to "cancelled"
-  };
+  const handleCancel = useCallback(() => {
+    updateReservationStatus("cancelled");
+  }, [updateReservationStatus]);
 
   return (
     <div className="border bg-background rounded-lg p-4">
@@ -182,11 +186,10 @@ const ReservationCard = ({
             </p>
           )}
 
-          {reservation.date && (
-            <p className="text-xs text-muted-foreground">
-              วันที่จอง : {formatDate(reservation.date)}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            วันที่จอง:{" "}
+            {reservation.date ? formatDateDisplay(reservation.date) : "ไม่ระบุ"}
+          </p>
         </div>
         <div className="mt-2 sm:mt-0">
           <span
@@ -350,9 +353,8 @@ const ReservationCard = ({
         {status.toLowerCase() !== "ยกเลิก" &&
           status.toLowerCase() !== "cancelled" && (
             <Button
-              variant="outline"
+              variant="destructive"
               size="lg"
-              className="text-red-600 hover:bg-red-50 hover:text-red-700"
               onClick={handleCancel}
               disabled={isConfirming || isCancelling}
             >
@@ -366,9 +368,6 @@ const ReservationCard = ({
               )}
             </Button>
           )}
-        <Button variant="outline" size="lg">
-          แก้ไข
-        </Button>
       </div>
     </div>
   );

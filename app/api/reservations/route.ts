@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { reservations } from "@/db/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/reservations - Get all reservations
@@ -53,27 +53,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/reservations - Create a new reservation
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { reservedByName, date, timeStart, timeEnd } = body;
+    const { customerId, reservedByName, date, timeStart, timeEnd } = body;
 
-    if (!reservedByName || !date || !timeStart || !timeEnd) {
+    console.log("Received date from frontend:", date);
+
+    if (!reservedByName || !date || !timeStart || !timeEnd || !customerId) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields, including customerId" },
         { status: 400 }
       );
     }
 
-    const customerId = body.customerId;
-
+    // Use date directly from the request body
     const newReservation = await db
       .insert(reservations)
       .values({
         customerId,
         reservedByName,
-        date: sql`(NOW() AT TIME ZONE 'Asia/Bangkok')`,
+        date, // Use the date directly from body without formatting
         timeStart,
         timeEnd,
         purpose: body.purpose || null,

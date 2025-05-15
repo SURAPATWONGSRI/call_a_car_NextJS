@@ -239,8 +239,14 @@ export function ReservationFormDialog({
         }
       }
 
-      // Format the date to ISO string for the API
-      const formattedDate = data.date.toISOString();
+      // Format the selected date as YYYY-MM-DD (for PostgreSQL date type)
+      const selectedDate = data.date;
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+      const day = String(selectedDate.getDate()).padStart(2, "0");
+      const formattedDate = `${year}-${month}-${day}`;
+
+      console.log("Selected date from form:", formattedDate);
 
       // Transform values before sending to API
       const vehicleId = data.vehicleId === "none" ? null : data.vehicleId;
@@ -257,7 +263,7 @@ export function ReservationFormDialog({
           vehicleId,
           driverId,
           customerId,
-          date: formattedDate,
+          date: formattedDate, // Send date in YYYY-MM-DD format
           passengerInfo: passengerInfoData,
         }),
       });

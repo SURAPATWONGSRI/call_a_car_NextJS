@@ -1,6 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   integer,
   pgEnum,
   pgTable,
@@ -82,7 +83,7 @@ export const reservations = pgTable("reservations", {
   reservedByName: varchar("reserved_by_name", { length: 100 }).notNull(),
 
   // รายละเอียดการจอง
-  date: timestamp("date").notNull(),
+  date: date("date").notNull(), // Changed from timestamp to date
   timeStart: varchar("time_start", { length: 10 }).notNull(),
   timeEnd: varchar("time_end", { length: 10 }).notNull(),
   purpose: text("purpose"),

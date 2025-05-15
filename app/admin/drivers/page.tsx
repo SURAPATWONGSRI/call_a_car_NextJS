@@ -236,7 +236,7 @@ const DriversPage = () => {
         </div>
         <Button
           onClick={() => setOpen(true)}
-          size="default"
+          size="lg"
           className="flex items-center gap-2"
         >
           <PlusCircle className="h-4 w-4" />
