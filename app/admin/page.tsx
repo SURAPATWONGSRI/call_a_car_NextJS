@@ -1,10 +1,24 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useSession } from "@/hooks/useSession";
 import { CalendarIcon, Car, Clock, Users } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const AdminHomePage = () => {
+  const { user } = useSession();
+  const [userEmail, setUserEmail] = useState("User");
+
+  // Update email when user data is available
+  useEffect(() => {
+    if (user?.email) {
+      // Use the part before @ for a cleaner display
+      const displayName = user.email || "กำลังโหลด...";
+      setUserEmail(displayName);
+    }
+  }, [user]);
+
   // Quick stats data
   const quickStats = [
     {
@@ -73,7 +87,7 @@ const AdminHomePage = () => {
     <div className="space-y-6 md:space-y-8 w-full">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">
-          ยินดีต้อนรับ, wakim
+          ยินดีต้อนรับ, {userEmail}
         </h1>
         <p className="text-muted-foreground">ภาพรวมของระบบ</p>
       </div>

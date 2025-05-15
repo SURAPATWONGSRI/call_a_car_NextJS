@@ -129,8 +129,8 @@ const ReservationCard = ({
         };
 
         // Show success toast
-        toast.success(`อัพเดทสถานะเป็น "${newStatus}" สำเร็จ`, {
-          description: "การเปลี่ยนแปลงมีผลแล้ว",
+        toast.success(`อัพเดท`, {
+          description: `อัพเดทสถานะเป็น "${newStatus}" สำเร็จ`,
         });
 
         if (onStatusChange) {
@@ -236,9 +236,7 @@ const ReservationCard = ({
             {reservation.pickupLocation && (
               <div className="flex items-center mt-1">
                 <span className="font-medium mr-1">ที่:</span>{" "}
-                <span className="text-muted-foreground">
-                  {reservation.pickupLocation}
-                </span>
+                <span className="text-sm">{reservation.pickupLocation}</span>
               </div>
             )}
           </div>
@@ -254,11 +252,9 @@ const ReservationCard = ({
               <span className="text-primary">{reservation.timeEnd || "-"}</span>
             </div>
             {reservation.dropoffLocation && (
-              <div className="flex items-center mt-1">
+              <div className="flex items-center mt-1 ">
                 <span className="font-medium mr-1">ที่:</span>{" "}
-                <span className="text-muted-foreground">
-                  {reservation.dropoffLocation}
-                </span>
+                <span className=" text-sm">{reservation.dropoffLocation}</span>
               </div>
             )}
           </div>

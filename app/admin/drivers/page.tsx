@@ -10,14 +10,22 @@ import { PlusCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import useSWR, { mutate } from "swr";
 
 import * as z from "zod";
+
+// Create a fetcher function for SWR
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch data");
+  }
+  return response.json();
+};
 
 const DriversPage = () => {
   const [open, setOpen] = useState(false);
   const [editFormOpen, setEditFormOpen] = useState(false);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -28,27 +36,20 @@ const DriversPage = () => {
   const searchParams = useSearchParams();
   const editParam = searchParams.get("edit");
 
-  // Split the data fetching and edit param handling into separate effects
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/drivers");
-        if (!response.ok) {
-          throw new Error("Failed to fetch drivers");
-        }
-        const data = await response.json();
-        setDrivers(data);
-      } catch (error) {
-        console.error("Error fetching drivers:", error);
-        toast.error("ไม่สามารถโหลดรายชื่อคนขับรถได้");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Replace useState and useEffect with useSWR
+  const {
+    data: drivers = [],
+    error,
+    isLoading,
+  } = useSWR<Driver[]>("/api/drivers", fetcher);
 
-    fetchDrivers();
-  }, []); // Remove editParam dependency
+  // Handle errors from SWR
+  useEffect(() => {
+    if (error) {
+      toast.error("ไม่สามารถโหลดรายชื่อคนขับรถได้");
+      console.error("Error fetching drivers:", error);
+    }
+  }, [error]);
 
   // Handle the edit parameter in a separate effect
   useEffect(() => {
@@ -102,8 +103,8 @@ const DriversPage = () => {
         }
       }
 
-      // Add the new driver to the list
-      setDrivers((prev) => [...prev, data]);
+      // Update the cache with the new driver
+      mutate("/api/drivers", [...(drivers || []), data], false);
 
       // Show success toast
       toast.success("สำเร็จ", {
@@ -119,6 +120,8 @@ const DriversPage = () => {
       };
     } finally {
       setIsSubmitting(false);
+      // Revalidate the cache
+      mutate("/api/drivers");
     }
   }
 
@@ -158,9 +161,11 @@ const DriversPage = () => {
         throw new Error(data.error || "Failed to delete driver");
       }
 
-      // Remove the driver from the list
-      setDrivers((prev) =>
-        prev.filter((driver) => driver.id !== driverToDelete.id)
+      // Update the cache by removing the deleted driver
+      mutate(
+        "/api/drivers",
+        drivers.filter((driver) => driver.id !== driverToDelete.id),
+        false
       );
 
       // Show success toast
@@ -174,6 +179,8 @@ const DriversPage = () => {
       toast.error("เกิดข้อผิดพลาดในการลบข้อมูล");
     } finally {
       setIsDeleting(false);
+      // Revalidate the cache
+      mutate("/api/drivers");
     }
   };
 
@@ -203,9 +210,11 @@ const DriversPage = () => {
         };
       }
 
-      // Update the driver in the list
-      setDrivers((prev) =>
-        prev.map((driver) => (driver.id === driverId ? data : driver))
+      // Update the cache with the updated driver
+      mutate(
+        "/api/drivers",
+        drivers.map((driver) => (driver.id === driverId ? data : driver)),
+        false
       );
 
       // Show success toast
@@ -222,6 +231,8 @@ const DriversPage = () => {
       };
     } finally {
       setIsSubmitting(false);
+      // Revalidate the cache
+      mutate("/api/drivers");
     }
   }
 
@@ -247,7 +258,7 @@ const DriversPage = () => {
       <div className="p-6">
         <DriversDataTable
           drivers={drivers}
-          loading={loading}
+          loading={isLoading}
           onEdit={handleEditDriver}
           onDelete={handleDeleteDriver}
         />

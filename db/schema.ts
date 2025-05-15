@@ -137,3 +137,17 @@ export const vehiclesRelations = relations(vehicles, ({ many }) => ({
 export const driversRelations = relations(drivers, ({ many }) => ({
   reservations: many(reservations),
 }));
+
+export const users = pgTable("user", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  role: text("role").notNull().default("user"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const sessions = pgTable("session", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  user_id: varchar("user_id", { length: 255 }).notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});

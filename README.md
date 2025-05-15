@@ -1,3 +1,69 @@
+# รถเช่า - Mini Project
+
+บริหารจัดการรถสำหรับการให้บริการรถเช่า พร้อมระบบจองและติดตามสถานะการใช้รถ
+
+## เทคโนโลยีที่ใช้
+
+- **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
+- **UI Library**: shadcn/ui
+- **State Management**: SWR, React Context
+- **Form Handling**: React Hook Form, Zod
+- **Database**: Supabase (PostgreSQL
+  )
+- **ORM**: Prisma
+- **Authentication**: NextAuth.js / Auth.js
+
+## คุณสมบัติ
+
+- 🚗 จัดการข้อมูลรถและคนขับ
+- 📆 ระบบจองรถ
+- 📊 แดชบอร์ดสำหรับผู้ดูแลระบบ
+- 👤 การจัดการผู้ใช้และการกำหนดสิทธิ์
+- 📱 Responsive design รองรับทุกขนาดหน้าจอ
+
+## โครงสร้างโปรเจค
+
+```
+/app - Next.js App Router
+  /api - API Routes
+  /(routes) - Application routes
+/components - React components
+/lib - Utility functions, configurations
+/prisma - Database schema and migrations
+/public - Static assets
+```
+
+## การติดตั้ง
+
+1. โคลนโปรเจค
+
+```bash
+git clone https://github.com/yourusername/mini-project.git
+cd mini-project
+```
+
+2. ติดตั้ง dependencies
+
+```bash
+npm install
+# หรือ
+yarn install
+```
+
+3. สร้างไฟล์ .env จาก .env.example และกำหนดค่า environment variables
+
+```bash
+cp .env.example .env
+```
+
+4. เริ่มการพัฒนา
+
+```bash
+npm run dev
+# หรือ
+yarn dev
+```
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

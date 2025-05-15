@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { ChevronsUpDown, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,19 +18,27 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { clearSession } from "@/lib/session";
+import { cn } from "@/lib/utils";
 
-export function NavUser({
-  user,
-  className,
-}: {
+interface NavUserProps {
   user: {
     name: string;
     role: string;
-    avatar: string;
+    initials: string;
   };
   className?: string;
-}) {
+}
+
+export function NavUser({ user, className }: NavUserProps) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    clearSession();
+
+    router.push("/");
+  };
 
   return (
     <SidebarMenu className={className}>
@@ -45,14 +53,13 @@ export function NavUser({
               )}
             >
               <Avatar className="h-7 w-7 md:h-8 md:w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className="rounded-lg text-xs md:text-sm">
-                  CN
+                  {user.initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-xs md:text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-[10px] md:text-xs opacity-80">
+                <span className="truncate text-[10px] md:text-xs capitalize opacity-80">
                   {user.role}
                 </span>
               </div>
@@ -68,19 +75,23 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-2 py-2 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {user.initials}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left leading-tight">
                   <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs opacity-80">
+                  <span className="truncate text-xs capitalize opacity-80">
                     {user.role}
                   </span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center gap-2">
+            <DropdownMenuItem
+              className="flex items-center gap-2"
+              onClick={handleLogout}
+            >
               <LogOut className="size-4" />
               <span>Log out</span>
             </DropdownMenuItem>
