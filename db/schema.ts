@@ -143,11 +143,11 @@ export const users = pgTable("user", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
   role: text("role").notNull().default("user"),
-  created_at: timestamp("created_at").defaultNow(),
+  createdAt,
 });
 
 export const sessions = pgTable("session", {
   id: varchar("id", { length: 255 }).primaryKey(),
   user_id: varchar("user_id", { length: 255 }).notNull(),
-  created_at: timestamp("created_at").defaultNow(),
+  createdAt,
 });

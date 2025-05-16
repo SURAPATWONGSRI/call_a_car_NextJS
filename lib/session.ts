@@ -40,20 +40,32 @@ export function getSession(): UserSession | null {
 
 /**
  * Clears the session from storage and server
+ * Returns a Promise that resolves when the logout API call completes
  */
-export function clearSession(): void {
-  if (typeof window === "undefined") return;
+export function clearSession(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
 
   try {
     // Clear client-side storage
     sessionStorage.removeItem("userSession");
 
-    // Call logout API to clear server-side session
-    fetch("/api/auth/logout", { method: "POST" }).catch((error) => {
-      console.error("Error during logout API call:", error);
-    });
+    // Call logout API to clear server-side session and return the promise
+    return fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include", // Ensure cookies are sent with the request
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Logout failed");
+        }
+        return;
+      })
+      .catch((error) => {
+        console.error("Error during logout API call:", error);
+      });
   } catch (error) {
     console.error("Error clearing session:", error);
+    return Promise.reject(error);
   }
 }
 

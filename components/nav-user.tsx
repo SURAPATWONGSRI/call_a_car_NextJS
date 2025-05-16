@@ -2,6 +2,7 @@
 
 import { ChevronsUpDown, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -33,11 +34,21 @@ interface NavUserProps {
 export function NavUser({ user, className }: NavUserProps) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    clearSession();
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
 
-    router.push("/");
+      // Wait for the server-side session to be cleared
+      await clearSession();
+
+      // Hard redirect to home page to ensure complete state refresh
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -91,9 +102,10 @@ export function NavUser({ user, className }: NavUserProps) {
             <DropdownMenuItem
               className="flex items-center gap-2"
               onClick={handleLogout}
+              disabled={isLoggingOut}
             >
               <LogOut className="size-4" />
-              <span>Log out</span>
+              <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
